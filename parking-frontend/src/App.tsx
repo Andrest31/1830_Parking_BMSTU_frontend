@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from "./components/Header/Header";
-import Footer from "./components/Footer/Footer"
+import ParkingsPage from './pages/ParkingsPage/ParkingsPage';
 
 function App() {
   return (
@@ -9,9 +9,9 @@ function App() {
       <div className="app">
         <Header/>
         <Routes>
-          {/* Здесь будут ваши Route */}
+          <Route path="/" element={<ParkingsPage />} />
+          <Route path="/parkings" element={<ParkingsPage />} />
         </Routes>
-        <Footer/>
       </div>
     </Router>
   );

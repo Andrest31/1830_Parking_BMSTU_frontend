@@ -1,0 +1,28 @@
+.search-line{
+    margin-top: 40px;
+    display: flex;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+
+}
+.search-bar{
+    height: 32px;
+    border-radius: 20px;
+    border: black 1px solid;
+    align-content: center;
+    margin-right: 20px;
+    width: 332px;
+    color: #6b6666;
+    padding-left: 18px;
+}
+.search-button{
+    height: 32px;
+    width: 89px;
+    border-radius: 20px;
+    color: white;
+    background-color: black;
+    border: black 1px solid;
+    align-content: center;
+    text-align: center;
+    cursor: pointer;
+}

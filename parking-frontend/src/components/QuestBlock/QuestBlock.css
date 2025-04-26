@@ -1,0 +1,56 @@
+.quest{
+    margin: 0 160px;
+}
+.quest-title{
+    font-size: 40px;
+    font-family: 'Dela Gothic One', sans-serif;
+    color: black;
+    margin-top: 40px;
+}
+.quest-content{
+    display: flex;
+    margin-top: 10px;
+}
+.quest-block{
+    position: absolute;
+    display: block;
+    margin-right: 0px;
+    right: 0px;
+}
+.quest-stack{
+    display: block;
+}
+.quest-item{
+    display: flex;
+    gap: 0px;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 15px;
+    font-size: 24px;
+    align-items: center;
+}
+.quest-btn{
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 12px;
+    border: black 1px solid;
+    cursor: pointer;
+}
+.quest-img-cont{
+    margin-left: 20px;
+    display: flex;
+    margin-bottom: 270px;
+}
+.quest-img1{
+    margin-top: 44px;
+    width: 277px;
+}
+.quest-img2{
+    margin-top: 176px;
+    width: 110px;
+    z-index: 2;
+    transform: rotate(5deg);
+    position: absolute;
+    left: 365px;
+}
