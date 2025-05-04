@@ -1,6 +1,5 @@
 import Footer from "../../components/Footer/Footer";
 import "./ParkingsPage.css";
-import KabanImage from "../../assets/Kaban.jpg"
 import ParkingCard from "../../components/ParkingCard/ParkingCard"
 import QuestBlock from "../../components/QuestBlock/QuestBlock";
 import SearchBar from "../../components/SearchBar/SearchBar"
@@ -19,7 +18,7 @@ const ParkingsPage = () => {
             <div className="title-item3">Перейти</div>
           </a>
         </div>
-        <img src={KabanImage} alt="Kaban" className="title-img" />
+        <img src={"http://localhost:9000/images/Kaban.jpg"} alt="Kaban" className="title-img" />
       </div>
 
       <div className="catalog" id="catalog-section">

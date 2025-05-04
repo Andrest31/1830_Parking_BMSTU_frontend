@@ -1,6 +1,5 @@
 import React from 'react';
 import Footer from "../../components/Footer/Footer";
-import HelloPageImage from '../../static/HelloPage.jpg';
 import './HelloPage.css';
 
 const HelloPage: React.FC = () => {
@@ -8,7 +7,7 @@ const HelloPage: React.FC = () => {
     <div className="app-container">
       {/* Main Content */}
       <div className="HelloPage">
-        <img src={HelloPageImage} alt="Welcome" className="HelloPage-img" />
+        <img src={"http://localhost:9000/images/HelloPage.jpg"} alt="Welcome" className="HelloPage-img" />
         <div className="HelloPage-Content">
           <div className="HelloPageTitle">Добро пожаловать!</div>
           <div className="HelloPageTitleDiscription">

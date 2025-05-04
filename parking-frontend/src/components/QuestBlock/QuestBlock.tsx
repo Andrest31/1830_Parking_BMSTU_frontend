@@ -1,5 +1,4 @@
 import "./QuestBlock.css";
-import QuestImage from "../../assets/quest.jpg"
 
 
 const QuestBlock = () => {
@@ -9,8 +8,8 @@ const QuestBlock = () => {
         <div className="quest-title">Основные вопросы</div>
         <div className="quest-content">
           <div className="quest-img-cont">
-            <img src={QuestImage} alt="Quest" className="quest-img1" />
-            <img src={QuestImage} alt="Quest" className="quest-img2" />
+            <img src={"http://localhost:9000/images/quest.jpg"} alt="Quest" className="quest-img1" />
+            <img src={"http://localhost:9000/images/quest.jpg"} alt="Quest" className="quest-img2" />
           </div>
           <div className="quest-block">
             <div className="quest-item">

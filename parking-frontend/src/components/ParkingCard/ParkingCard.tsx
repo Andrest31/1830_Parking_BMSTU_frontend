@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
 import "./ParkingCard.css";
-import MockImage from "./mock.jpg"
 
 const ParkingCard = () => {
   return (
     <div>
         <div className="catalog-card">
-              <img src={MockImage} alt="Mock" className="card-img" />
+              <img src={"http://localhost:9000/images/mock.jpg"} alt="Mock" className="card-img" />
               <div className="card-info">
                 <div className="parking-name">Главное здание</div>
                 <div className="parking-place">ул. 2-ая Бауманская, д. 31</div>
