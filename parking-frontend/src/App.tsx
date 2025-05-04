@@ -4,6 +4,7 @@ import ParkingsPage from './pages/ParkingsPage/ParkingsPage';
 import ParkingPage from './pages/ParkingPage/ParkingPage';
 import HelloPage from './pages/HelloPage/HelloPage';
 import PassPage from './pages/PassPage/PassPage';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 
 function App() {
   const parkingData = {
@@ -18,6 +19,7 @@ function App() {
     <Router>
       <div className="app">
         <Header/>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<ParkingsPage />} />
           <Route path="/parkings" element={<ParkingsPage />} />
