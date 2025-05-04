@@ -1,23 +1,34 @@
+import { useState } from "react";
 import "./SearchBar.css";
 
+interface SearchBarProps {
+  onSearch: (time: string) => void;
+}
 
-const SearchBar = () => {
+const SearchBar = ({ onSearch }: SearchBarProps) => {
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(searchValue);
+  };
+
   return (
-    <div>
-        <div className="search-line">
-            <form method="GET">
-              <input
-                name="work_hour"
-                placeholder="Время работы"
-                className="search-bar"
-                min="0"
-                max="23"
-              />
-              <button type="submit" className="search-button">Найти</button>
-            </form>
-          </div>
+    <div className="search-line">
+      <form onSubmit={handleSubmit} method="GET">
+        <input
+          name="work_hour"
+          placeholder="Время работы"
+          className="search-bar"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+        />
+        <button type="submit" className="search-button">
+          Найти
+        </button>
+        
+      </form>
     </div>
-
   );
 };
 

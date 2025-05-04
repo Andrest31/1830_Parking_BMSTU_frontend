@@ -8,11 +8,12 @@ import { Link } from "react-router-dom";
 import { Parking, ParkingResponse } from '../../types';
 import { useEffect, useState } from "react";
 
-
 const ParkingsPage = () => {
   const [parkings, setParkings] = useState<Parking[]>([]);
+  const [filteredParkings, setFilteredParkings] = useState<Parking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTime] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchParkings = async () => {
@@ -23,6 +24,7 @@ const ParkingsPage = () => {
         }
         const data: ParkingResponse = await response.json();
         setParkings(data.parkings);
+        setFilteredParkings(data.parkings); // Initialize filtered parkings with all parkings
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -32,6 +34,28 @@ const ParkingsPage = () => {
 
     fetchParkings();
   }, []);
+
+  // Filter parkings based on search time
+  useEffect(() => {
+    if (searchTime !== null) {
+      const filtered = parkings.filter(parking => 
+        parking.open_hour <= searchTime && searchTime <= parking.close_hour
+      );
+      setFilteredParkings(filtered);
+    } else {
+      setFilteredParkings(parkings); // Show all parkings when no time is selected
+    }
+  }, [searchTime, parkings]);
+
+  const handleTimeSearch = (time: string) => {
+    const hour = parseInt(time, 10);
+    if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+      const filtered = parkings.filter(
+        parking => parking.open_hour <= hour && hour <= parking.close_hour
+      );
+      setFilteredParkings(filtered);
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -56,31 +80,32 @@ const ParkingsPage = () => {
             <Link to={`/pass/${4}`}>
               <img src={ListIcon} alt="List" className="Pass-button" />
             </Link>
-
           </div>
-          <SearchBar/>
+          <SearchBar 
+            onSearch={handleTimeSearch} 
+          />
         </div>
 
         <div className="catalog-content">
-          {/* Пример одного элемента парковки */}
-          {parkings.length > 0 ? (
-            parkings.map(parking => (
+          {filteredParkings.length > 0 ? (
+            filteredParkings.map(parking => (
               <ParkingCard 
                 key={parking.id}
                 parking={parking}
               />
             ))
           ) : (
-            <div className="no-results">Нет доступных парковок</div>
+            <div className="no-results">
+              {searchTime !== null 
+                ? `Нет парковок, открытых в ${searchTime}:00` 
+                : 'Нет доступных парковок'}
+            </div>
           )}
-          {/* Сообщение при отсутствии парковок */}
-          {/* <div className="no-results">Нет доступных парковок для выбранного времени</div> */}
         </div>
       </div>
 
       <QuestBlock/>
-
-    <Footer/>
+      <Footer/>
     </div>
   );
 };
