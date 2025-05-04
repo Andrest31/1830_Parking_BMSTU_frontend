@@ -16,7 +16,7 @@ const ParkingCard = ({ parking }: ParkingCardProps) => {
                 <div className="parking-place">{parking.place}</div>
               </div>
               <div className="parking-worktime">Открыто: {parking.open_hour}:00 - {parking.close_hour}:00</div>
-              <Link to="/parking/{parking.id}">
+              <Link to={`/parking/${parking.id}`}>
                 <div className="card-button">подробнее</div>
               </Link>
         </div>

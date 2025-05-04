@@ -1,22 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './ParkingPage.css';
 import Footer from "../../components/Footer/Footer";
-
-
-interface Parking {
-    id: number;
-    short_name: string;
-    description: string;
-    description_url: string;
-    open_hour: number;
-    close_hour: number;
-  }
-
-  interface ParkingPageProps {
-    parking: Parking;
-  }
+import { Parking } from '../../types';
+import { useParams } from 'react-router-dom';
   
-const ParkingPage: React.FC<ParkingPageProps> = ({ parking }) => {
+const ParkingPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [parking, setParking] = useState<Parking | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchParking = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/parkings/${id}/`);
+        if (!response.ok) {
+          throw new Error('Парковка не найдена');
+        }
+        const data = await response.json();
+        setParking(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Произошла ошибка');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchParking();
+  }, [id]);
+
+  if (loading) return <div>Загрузка...</div>;
+  if (error) return <div>{error}</div>;
+  if (!parking) return <div>Парковка не найдена</div>;
+  
   return (
     <div className="app-container">
 
