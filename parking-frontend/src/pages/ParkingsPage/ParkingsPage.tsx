@@ -4,6 +4,9 @@ import KabanImage from "../../assets/Kaban.jpg"
 import ParkingCard from "../../components/ParkingCard/ParkingCard"
 import QuestBlock from "../../components/QuestBlock/QuestBlock";
 import SearchBar from "../../components/SearchBar/SearchBar"
+import ListIcon from "../../assets/list.svg"
+import { Link } from "react-router-dom";
+
 
 const ParkingsPage = () => {
   return (
@@ -23,9 +26,10 @@ const ParkingsPage = () => {
         <div className="top-cont">
           <div className="Rent_line">
             <div className="Rent_title">Аренда места</div>
-            <a href="#" className="disabled-link">
-              {/*<img src={ListIcon} alt="List" className="Pass-button" />*/}
-            </a>
+            <Link to="/pass">
+              <img src={ListIcon} alt="List" className="Pass-button" />
+            </Link>
+
           </div>
           <SearchBar/>
         </div>

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import "./Header.css";
 import BMSTU_Logo from "../../assets/BMSTU_Logo.svg"; // Импортируем изображения
 import ProfileIcon from "../../assets/Profile.svg";
@@ -8,7 +8,9 @@ const Header = () => {
     <header className="header_line">
       <div className="header_content">
         <img src={BMSTU_Logo} alt="Логотип МГТУ им. Баумана" className="bmstu_logo" />
-        <div className="btn-1830">1830</div>
+        <Link to="/hello">
+          <div className="btn-1830">1830</div>
+        </Link>
         <div className="parking-text-content">
           <div className="parking-text">Паркинг</div>
           <div className="parking-text">МГТУ им. Баумана</div>
