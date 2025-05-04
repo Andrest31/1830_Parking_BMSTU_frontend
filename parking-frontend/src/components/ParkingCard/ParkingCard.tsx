@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./ParkingCard.css";
 import MockImage from "./mock.jpg"
 
@@ -11,9 +12,9 @@ const ParkingCard = () => {
                 <div className="parking-place">ул. 2-ая Бауманская, д. 31</div>
               </div>
               <div className="parking-worktime">Открыто: 8:00 - 20:00</div>
-              <a href="#">
+              <Link to="/parking">
                 <div className="card-button">подробнее</div>
-              </a>
+              </Link>
         </div>
     
             <div className="item-lower-buttons">
