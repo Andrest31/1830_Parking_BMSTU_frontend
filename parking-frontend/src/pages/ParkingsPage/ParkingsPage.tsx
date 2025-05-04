@@ -53,7 +53,7 @@ const ParkingsPage = () => {
         <div className="top-cont">
           <div className="Rent_line">
             <div className="Rent_title">Аренда места</div>
-            <Link to="/pass">
+            <Link to={`/pass/${4}`}>
               <img src={ListIcon} alt="List" className="Pass-button" />
             </Link>
 

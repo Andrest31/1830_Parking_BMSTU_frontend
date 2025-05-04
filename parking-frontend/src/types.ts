@@ -20,3 +20,23 @@ export interface Parking {
     parkings: Parking[];
     draft_order?: OrderData;
   }
+
+  export interface OrderItem {
+    id: number;
+    parking?: {
+      id: number;
+      short_name: string;
+      image_url: string;
+    };
+    quantity: number;
+  }
+  
+  export interface OrderDetail {
+    id: number;
+    user_name: string;
+    state_number: string;
+    deadline: string;
+    status: string;
+    created_at: string;
+    items: OrderItem[];
+  }
