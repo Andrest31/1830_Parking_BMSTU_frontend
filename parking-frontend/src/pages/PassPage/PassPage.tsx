@@ -12,15 +12,24 @@ const PassPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingParkings, setUpdatingParkings] = useState<number[]>([]);
+  const [updatingFields, setUpdatingFields] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/orders/${id}/`);
+        const response = await fetch(`/api/orders/${id}/`);
         if (!response.ok) {
           throw new Error('Заявка не найдена');
         }
         const data: OrderDetail = await response.json();
+        
+        // Форматируем дату для корректного отображения в input[type="date"]
+        if (data.deadline) {
+          const date = new Date(data.deadline);
+          const formattedDate = date.toISOString().split('T')[0];
+          data.deadline = formattedDate;
+        }
+        
         setOrder(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Произошла ошибка');
@@ -33,64 +42,62 @@ const PassPage: React.FC = () => {
   }, [id]);
 
   // Функция для получения CSRF токена из куков
-const getCsrfToken = () => {
-  const cookieValue = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('csrftoken='))
-    ?.split('=')[1];
-  return cookieValue || '';
-};
+  const getCsrfToken = () => {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    return cookieValue || '';
+  };
 
-const handleFieldChange = async (field: string, value: string) => {
-  if (!order) return;
-  
-  // Сохраняем предыдущее значение для отката
-  const prevValue = order[field as keyof OrderDetail];
-  
-  // Оптимистичное обновление UI
-  setOrder(prev => ({ ...prev!, [field]: value }));
-  
-  try {
-    const response = await fetch(`/api/orders/${order.id}/update/`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken(),
-      },
-      credentials: 'include',
-      body: JSON.stringify({ [field]: value }),
-    });
+  const handleFieldBlur = async (field: keyof OrderDetail, e: React.FocusEvent<HTMLInputElement>) => {
+    if (!order) return;
+    
+    const newValue = e.target.value;
+    const prevValue = order[field];
+    
+    // Если значение не изменилось, ничего не делаем
+    if (newValue === prevValue) return;
+    
+    // Блокируем поле на время запроса
+    setUpdatingFields(prev => [...prev, field as string]);
+    
+    try {
+      const response = await fetch(`/api/orders/${order.id}/update/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ [field]: newValue }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Ошибка обновления');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка обновления');
+      }
+
+      // Получаем подтверждение от сервера
+      const updatedData = await response.json();
+      setOrder(prev => ({ ...prev!, ...updatedData }));
+
+    } catch (err) {
+      console.error('Ошибка обновления:', err);
+      // Откатываем UI к предыдущему значению
+      e.target.value = prevValue as string;
+      alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
+    } finally {
+      setUpdatingFields(prev => prev.filter(f => f !== field));
     }
-
-    // Получаем и применяем обновленные данные с сервера
-    const updatedResponse = await fetch(`/api/orders/${order.id}/`);
-    if (updatedResponse.ok) {
-      const updatedOrder = await updatedResponse.json();
-      setOrder(updatedOrder);
-    }
-    
-  } catch (err) {
-    console.error('Ошибка обновления:', err);
-    
-    // Откатываем изменения при ошибке
-    setOrder(prev => ({ ...prev!, [field]: prevValue }));
-    
-    alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
-  }
-};
+  };
 
   const updateQuantity = async (parkingId: number, newQuantity: number) => {
     if (!order || !parkingId || newQuantity < 1) return;
   
-    // Блокируем UI на время запроса
     setUpdatingParkings(prev => [...prev, parkingId]);
   
     try {
-      // 1. Отправляем обновление на сервер
       const response = await fetch(
         `/api/orders/${order.id}/items/${parkingId}/`,
         {
@@ -104,13 +111,11 @@ const handleFieldChange = async (field: string, value: string) => {
         }
       );
   
-      // 2. Проверяем ответ сервера
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Ошибка обновления количества');
       }
   
-      // 3. Оптимистичное обновление UI
       setOrder(prev => {
         if (!prev) return null;
         return {
@@ -123,24 +128,19 @@ const handleFieldChange = async (field: string, value: string) => {
         };
       });
   
-      // 4. Получаем подтверждение с сервера (опционально)
       const updatedData = await response.json();
       console.log('Сервер подтвердил обновление:', updatedData);
   
     } catch (err) {
       console.error('Ошибка обновления:', err);
-      
-      // Откатываем изменения при ошибке
       const freshData = await fetch(`/api/orders/${order.id}/`).then(res => res.json());
       setOrder(freshData);
-      
       alert(err instanceof Error ? err.message : 'Не удалось изменить количество');
     } finally {
       setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
     }
   };
   
-  // Обработчик изменения количества
   const handleQuantityChange = (parkingId: number, delta: number) => {
     if (!order) return;
     
@@ -169,7 +169,6 @@ const handleFieldChange = async (field: string, value: string) => {
           },
           credentials: 'include',
           body: JSON.stringify({
-            order_id: order.id,
             parking_id: parkingId
           }),
         }
@@ -180,7 +179,6 @@ const handleFieldChange = async (field: string, value: string) => {
         throw new Error(errorData.error || 'Не удалось удалить элемент');
       }
   
-      // Оптимистичное обновление UI
       setOrder(prev => prev ? {
         ...prev,
         items: prev.items.filter(item => item.parking?.id !== parkingId)
@@ -188,12 +186,8 @@ const handleFieldChange = async (field: string, value: string) => {
   
     } catch (err) {
       console.error('Ошибка удаления:', err);
-      
-      // Откатываем изменения
-      const freshData = await fetch(`/api/orders/${order.id}/`)
-        .then(res => res.json());
+      const freshData = await fetch(`/api/orders/${order.id}/`).then(res => res.json());
       setOrder(freshData);
-      
       alert(err instanceof Error ? err.message : 'Ошибка удаления');
     } finally {
       setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
@@ -207,13 +201,12 @@ const handleFieldChange = async (field: string, value: string) => {
       const response = await fetch(`/api/orders/${order.id}/delete/`, {
         method: 'DELETE',
         headers: {
-          'X-CSRFToken': getCsrfToken(), // CSRF-токен для Django
+          'X-CSRFToken': getCsrfToken(),
         },
-        credentials: 'include', // Для передачи куки (если требуется)
+        credentials: 'include',
       });
   
       if (response.ok) {
-        // Перенаправляем на главную страницу после удаления
         navigate('/');
       } else {
         const errorData = await response.json();
@@ -231,12 +224,12 @@ const handleFieldChange = async (field: string, value: string) => {
   
     try {
       const response = await fetch(`/api/orders/${order.id}/submit/`, {
-        method: 'PUT',  // Используем PUT, как в API
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': getCsrfToken(), // Если Django требует CSRF
+          'X-CSRFToken': getCsrfToken(),
         },
-        credentials: 'include', // Для передачи куки (если нужно)
+        credentials: 'include',
       });
   
       if (!response.ok) {
@@ -244,7 +237,6 @@ const handleFieldChange = async (field: string, value: string) => {
         throw new Error(errorData.error || 'Ошибка подтверждения заявки');
       }
   
-      // Перенаправляем на страницу успеха
       navigate('/parkings');
     } catch (err) {
       console.error('Ошибка подтверждения заявки:', err);
@@ -271,28 +263,34 @@ const handleFieldChange = async (field: string, value: string) => {
                 <input
                   type="text"
                   className="PassInputField"
-                  value={order.user_name}
-                  onChange={(e) => handleFieldChange('user_name', e.target.value)}
+                  defaultValue={order.user_name}
+                  onBlur={(e) => handleFieldBlur('user_name', e)}
+                  disabled={updatingFields.includes('user_name')}
                   required
                 />
+                {updatingFields.includes('user_name') && <span className="saving-indicator">Сохранение...</span>}
 
                 <div className="PassPageDiscription">Гос номер ТС</div>
                 <input
                   type="text"
                   className="PassInputField"
-                  value={order.state_number}
-                  onChange={(e) => handleFieldChange('state_number', e.target.value)}
+                  defaultValue={order.state_number}
+                  onBlur={(e) => handleFieldBlur('state_number', e)}
+                  disabled={updatingFields.includes('state_number')}
                   required
                 />
+                {updatingFields.includes('state_number') && <span className="saving-indicator">Сохранение...</span>}
 
                 <div className="PassPageDiscription">Срок действия абонемента</div>
                 <input
                   type="date"
                   className="PassInputField"
-                  value={order.deadline}
-                  onChange={(e) => handleFieldChange('deadline', e.target.value)}
+                  defaultValue={order.deadline}
+                  onBlur={(e) => handleFieldBlur('deadline', e)}
+                  disabled={updatingFields.includes('deadline')}
                   required
                 />
+                {updatingFields.includes('deadline') && <span className="saving-indicator">Сохранение...</span>}
               </div>
 
               <div className="right-block">
