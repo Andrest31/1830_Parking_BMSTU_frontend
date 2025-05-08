@@ -16,10 +16,13 @@ export interface Parking {
     items_count?: number;
   }
   
-  export interface ParkingResponse {
+  export type ParkingResponse = {
     parkings: Parking[];
-    draft_order?: OrderData;
-  }
+    draft_order?: {
+      order_id: number;
+      items_count: number;
+    };
+  };
 
   export interface OrderItem {
     id: number;
@@ -30,6 +33,7 @@ export interface Parking {
     };
     quantity: number;
   }
+  
   
   export interface OrderDetail {
     id: number;

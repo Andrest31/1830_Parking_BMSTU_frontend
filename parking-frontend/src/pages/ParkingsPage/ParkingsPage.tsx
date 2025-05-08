@@ -14,24 +14,44 @@ const ParkingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTime] = useState<number | null>(null);
+  const [draftOrderId, setDraftOrderId] = useState<number | null>(null);
+
+  const checkDraftOrder = async () => {
+    try {
+      const response = await fetch('/api/parkings/');
+      if (response.ok) {
+        const data: ParkingResponse = await response.json();
+        if (data.draft_order) {
+          setDraftOrderId(data.draft_order.order_id);
+        }
+      }
+    } catch (err) {
+      console.error('Error checking draft order:', err);
+    }
+  };
 
   useEffect(() => {
     const fetchParkings = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/parkings/');
+        const response = await fetch('/api/parkings/');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data: ParkingResponse = await response.json();
         setParkings(data.parkings);
-        setFilteredParkings(data.parkings); // Initialize filtered parkings with all parkings
+        setFilteredParkings(data.parkings);
+        
+        // Сохраняем ID черновика, если он есть
+        if (data.draft_order) {
+          setDraftOrderId(data.draft_order.order_id);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchParkings();
   }, []);
 
@@ -47,6 +67,13 @@ const ParkingsPage = () => {
     }
   }, [searchTime, parkings]);
 
+  const handlePassButtonClick = (e: React.MouseEvent) => {
+    if (!draftOrderId) {
+      e.preventDefault();
+      alert('Пожалуйста, сначала добавьте парковку в заявку');
+    }
+  };
+
   const handleTimeSearch = (time: string) => {
     const hour = parseInt(time, 10);
     if (!isNaN(hour) && hour >= 0 && hour <= 23) {
@@ -59,7 +86,7 @@ const ParkingsPage = () => {
 
   const handleAddToOrder = async (parkingId: number, quantity: number): Promise<void> => {
     try {
-      const response = await fetch(`http://localhost:8000/api/parkings/${parkingId}/add-to-order/`, {
+      const response = await fetch(`/api/parkings/${parkingId}/add-to-order/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,6 +101,7 @@ const ParkingsPage = () => {
       }
   
       const data = await response.json();
+      await checkDraftOrder();
       console.log('Added to order:', data);
       alert(`Добавлено ${quantity} парковочных мест! Текущее количество: ${data.quantity}`);
       
@@ -110,7 +138,10 @@ const ParkingsPage = () => {
         <div className="top-cont">
           <div className="Rent_line">
             <div className="Rent_title">Аренда места</div>
-            <Link to={`/pass/${4}`}>
+            <Link 
+              to={draftOrderId ? `/pass/${draftOrderId}` : '#'} 
+              onClick={handlePassButtonClick}
+            >
               <img src={ListIcon} alt="List" className="Pass-button" />
             </Link>
           </div>
