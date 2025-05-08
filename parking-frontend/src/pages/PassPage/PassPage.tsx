@@ -41,25 +41,47 @@ const getCsrfToken = () => {
   return cookieValue || '';
 };
 
-  const handleFieldChange = async (field: string, value: string) => {
-    if (!order) return;
-    
-    setOrder(prev => ({ ...prev!, [field]: value }));
-    
-    try {
-      const response = await fetch(`http://localhost:8000/api/orders/${order.id}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-      if (!response.ok) throw new Error('Ошибка обновления');
-    } catch (err) {
-      console.error('Ошибка обновления:', err);
-      setOrder(prev => ({ ...prev!, [field]: prev![field as keyof OrderDetail] }));
+const handleFieldChange = async (field: string, value: string) => {
+  if (!order) return;
+  
+  // Сохраняем предыдущее значение для отката
+  const prevValue = order[field as keyof OrderDetail];
+  
+  // Оптимистичное обновление UI
+  setOrder(prev => ({ ...prev!, [field]: value }));
+  
+  try {
+    const response = await fetch(`/api/orders/${order.id}/update/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+      credentials: 'include',
+      body: JSON.stringify({ [field]: value }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Ошибка обновления');
     }
-  };
+
+    // Получаем и применяем обновленные данные с сервера
+    const updatedResponse = await fetch(`/api/orders/${order.id}/`);
+    if (updatedResponse.ok) {
+      const updatedOrder = await updatedResponse.json();
+      setOrder(updatedOrder);
+    }
+    
+  } catch (err) {
+    console.error('Ошибка обновления:', err);
+    
+    // Откатываем изменения при ошибке
+    setOrder(prev => ({ ...prev!, [field]: prevValue }));
+    
+    alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
+  }
+};
 
   const updateQuantity = async (parkingId: number, newQuantity: number) => {
     if (!order || !parkingId || newQuantity < 1) return;
@@ -133,23 +155,48 @@ const getCsrfToken = () => {
 
   const handleRemoveItem = async (parkingId: number) => {
     if (!order || !window.confirm('Удалить парковку из заявки?')) return;
-
+  
+    setUpdatingParkings(prev => [...prev, parkingId]);
+  
     try {
       const response = await fetch(
-        `http://localhost:8000/api/orders/${order.id}/items/${parkingId}/`,
-        { 
+        `/api/orders/${order.id}/items/`,
+        {
           method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
           credentials: 'include',
+          body: JSON.stringify({
+            order_id: order.id,
+            parking_id: parkingId
+          }),
         }
       );
-      
-      if (!response.ok) throw new Error('Не удалось удалить элемент');
-      
-      const updatedOrder = await fetch(`http://localhost:8000/api/orders/${order.id}/`).then(res => res.json());
-      setOrder(updatedOrder);
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Не удалось удалить элемент');
+      }
+  
+      // Оптимистичное обновление UI
+      setOrder(prev => prev ? {
+        ...prev,
+        items: prev.items.filter(item => item.parking?.id !== parkingId)
+      } : null);
+  
     } catch (err) {
       console.error('Ошибка удаления:', err);
-      alert('Не удалось удалить парковку');
+      
+      // Откатываем изменения
+      const freshData = await fetch(`/api/orders/${order.id}/`)
+        .then(res => res.json());
+      setOrder(freshData);
+      
+      alert(err instanceof Error ? err.message : 'Ошибка удаления');
+    } finally {
+      setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
     }
   };
 
