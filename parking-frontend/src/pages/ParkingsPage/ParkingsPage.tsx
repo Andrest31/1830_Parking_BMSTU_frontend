@@ -57,6 +57,39 @@ const ParkingsPage = () => {
     }
   };
 
+  const handleAddToOrder = async (parkingId: number, quantity: number): Promise<void> => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/parkings/${parkingId}/add-to-order/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken') || '',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ quantity }), // Отправляем количество на сервер
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('Added to order:', data);
+      alert(`Добавлено ${quantity} парковочных мест! Текущее количество: ${data.quantity}`);
+      
+    } catch (err) {
+      console.error('Error adding to order:', err);
+      alert('Произошла ошибка при добавлении в заказ');
+    }
+  };
+  
+  // Функция для получения CSRF токена
+  function getCookie(name: string) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+  }
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   
@@ -92,6 +125,7 @@ const ParkingsPage = () => {
               <ParkingCard 
                 key={parking.id}
                 parking={parking}
+                onAddToOrder={handleAddToOrder}
               />
             ))
           ) : (

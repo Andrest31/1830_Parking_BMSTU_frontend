@@ -1,12 +1,37 @@
 import { Link } from "react-router-dom";
 import "./ParkingCard.css";
 import { Parking } from "../../types";
+import { useState } from "react";
 
 interface ParkingCardProps {
   parking: Parking;
+  onAddToOrder: (parkingId: number, quantity: number) => Promise<void>;
 }
 
-const ParkingCard = ({ parking }: ParkingCardProps) => {
+const ParkingCard = ({ parking, onAddToOrder }: ParkingCardProps) => {
+  const [quantity, setQuantity] = useState(1);
+
+  const handleAddClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await onAddToOrder(parking.id, quantity);
+      // После успешного добавления сбрасываем счетчик
+      setQuantity(1);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleIncrement = () => {
+    setQuantity(prev => prev + 1);
+  };
+
+  const handleDecrement = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  }
+
   return (
     <div>
         <div className="catalog-card">
@@ -23,12 +48,12 @@ const ParkingCard = ({ parking }: ParkingCardProps) => {
     
             <div className="item-lower-buttons">
               <div className="quantity-interface">
-                <div className="minus-button">-</div>
-                <div className="quantity">0</div>
-                <div className="minus-button">+</div>
+                <div className="minus-button" onClick={handleDecrement}>-</div>
+                <div className="quantity">{quantity}</div>
+                <div className="minus-button" onClick={handleIncrement}>+</div>
               </div>
               <div className="add-button">
-                <a href="#" className="add_to_o_btn">Добавить</a>
+                <a href="#" className="add_to_o_btn" onClick={handleAddClick}>Добавить</a>
               </div>
             </div>
     </div>
