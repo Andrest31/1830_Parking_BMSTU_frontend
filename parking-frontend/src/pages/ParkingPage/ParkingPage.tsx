@@ -9,6 +9,40 @@ const ParkingPage: React.FC = () => {
   const [parking, setParking] = useState<Parking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const quantity = 1;
+
+  const handleAddToOrder = async (parkingId: number, quantity: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/parkings/${parkingId}/add-to-order/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*=\s*([^;]*).*$)|^.*$/, '$1') || '',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ quantity }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Added to order:', data);
+      alert(`Добавлено ${quantity} парковочных мест! Текущее количество: ${data.quantity}`);
+    } catch (err) {
+      console.error('Error adding to order:', err);
+      alert('Произошла ошибка при добавлении в заказ');
+      throw err;
+    }
+  };
+
+  const handleAddClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (parking) {
+      await handleAddToOrder(parking.id, quantity);
+    }
+  };
 
   useEffect(() => {
     const fetchParking = async () => {
@@ -58,7 +92,7 @@ const ParkingPage: React.FC = () => {
           </div>
         </div>
         <div className="parking-add-button">
-          <a href={`/add-to-order/${parking.id}`} className="add_to_o_btn">добавить</a>
+          <a href="#" className="add_to_o_btn" onClick={handleAddClick}>добавить</a>
         </div>
       </div>
 
