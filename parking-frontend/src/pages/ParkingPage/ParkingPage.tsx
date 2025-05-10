@@ -3,6 +3,7 @@ import './ParkingPage.css';
 import Footer from "../../components/Footer/Footer";
 import { Parking } from '../../types';
 import { useParams } from 'react-router-dom';
+import Loader from "../../components/Loader/Loader";
   
 const ParkingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,7 +14,7 @@ const ParkingPage: React.FC = () => {
 
   const handleAddToOrder = async (parkingId: number, quantity: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/parkings/${parkingId}/add-to-order/`, {
+      const response = await fetch(`/api/parkings/${parkingId}/add-to-order/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ const ParkingPage: React.FC = () => {
   useEffect(() => {
     const fetchParking = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/parkings/${id}/`);
+        const response = await fetch(`/api/parkings/${id}/`);
         if (!response.ok) {
           throw new Error('Парковка не найдена');
         }
@@ -63,7 +64,7 @@ const ParkingPage: React.FC = () => {
     fetchParking();
   }, [id]);
 
-  if (loading) return <div>Загрузка...</div>;
+  if (loading) return <div><Loader/></div>;
   if (error) return <div>{error}</div>;
   if (!parking) return <div>Парковка не найдена</div>;
   

@@ -8,7 +8,7 @@ const Header = () => {
     <header className="header_line">
       <div className="header_content">
         <img src={BMSTU_Logo} alt="Логотип МГТУ им. Баумана" className="bmstu_logo" />
-        <Link to="/hello">
+        <Link to="/hello" style={{ textDecoration: 'none' }}>
           <div className="btn-1830">1830</div>
         </Link>
         <div className="parking-text-content">

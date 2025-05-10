@@ -6,6 +6,7 @@ import SearchBar from "../../components/SearchBar/SearchBar"
 import ListIcon from "../../assets/list.svg"
 import { Link } from "react-router-dom";
 import { Parking, ParkingResponse } from '../../types';
+import Loader from "../../components/Loader/Loader";
 import { useEffect, useState } from "react";
 
 const ParkingsPage = () => {
@@ -27,6 +28,15 @@ const ParkingsPage = () => {
       }
     } catch (err) {
       console.error('Error checking draft order:', err);
+    }
+  };
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -118,7 +128,7 @@ const ParkingsPage = () => {
     if (parts.length === 2) return parts.pop()?.split(';').shift();
   }
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div><Loader/></div>;
   if (error) return <div>Error: {error}</div>;
   
   return (
@@ -127,7 +137,14 @@ const ParkingsPage = () => {
         <div className="title-items-container">
           <div className="title-item1">Парковочные места для сотрудников университета</div>
           <div className="title-item2">Доступны посуточная и бессрочная аренда мест. Срок действия абонемента любой. За абонементом закрепляется пропуск на парковку, парковаться можно на любом свободном месте.</div>
-          <a href="#" className="title-item4">
+          <a 
+            href="#catalog-section" 
+            className="title-item4"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToSection('catalog-section');
+            }}
+          >
             <div className="title-item3">Перейти</div>
           </a>
         </div>

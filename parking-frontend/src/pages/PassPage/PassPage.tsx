@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TrashIcon from '../../assets/trash.svg';
 import Footer from "../../components/Footer/Footer";
+import Loader from "../../components/Loader/Loader";
+
 import './PassPage.css';
 import { OrderDetail } from '../../types';
 
@@ -244,7 +246,7 @@ const PassPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div>Загрузка...</div>;
+  if (loading) return <div><Loader/></div>;
   if (error) return <div>{error}</div>;
   if (!order) return <div>Заявка не найдена</div>;
 
@@ -268,7 +270,7 @@ const PassPage: React.FC = () => {
                   disabled={updatingFields.includes('user_name')}
                   required
                 />
-                {updatingFields.includes('user_name') && <span className="saving-indicator">Сохранение...</span>}
+                {updatingFields.includes('user_name') && <span className="saving-indicator"><Loader/></span>}
 
                 <div className="PassPageDiscription">Гос номер ТС</div>
                 <input
@@ -279,7 +281,7 @@ const PassPage: React.FC = () => {
                   disabled={updatingFields.includes('state_number')}
                   required
                 />
-                {updatingFields.includes('state_number') && <span className="saving-indicator">Сохранение...</span>}
+                {updatingFields.includes('state_number') && <span className="saving-indicator"><Loader/></span>}
 
                 <div className="PassPageDiscription">Срок действия абонемента</div>
                 <input
@@ -290,7 +292,7 @@ const PassPage: React.FC = () => {
                   disabled={updatingFields.includes('deadline')}
                   required
                 />
-                {updatingFields.includes('deadline') && <span className="saving-indicator">Сохранение...</span>}
+                {updatingFields.includes('deadline') && <span className="saving-indicator"><Loader/></span>}
               </div>
 
               <div className="right-block">
@@ -306,7 +308,7 @@ const PassPage: React.FC = () => {
                         <div key={parkingId} className="pass-card">
                           <div className="pass-card-left-block">
                             <img 
-                              src={item.parking?.image_url || "http://localhost:9000/images/mock.jpg"} 
+                              src={item.parking?.image_url || "http://localhost:9000/images/PassParking.jpg"} 
                               alt={item.parking?.short_name} 
                               className="pass-parking-img" 
                             />

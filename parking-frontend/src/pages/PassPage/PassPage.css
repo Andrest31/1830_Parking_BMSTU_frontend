@@ -85,6 +85,7 @@ body{
     border: white 4px solid;
     height: 43px;
     align-items: center;
+    text-align: center;
     margin-bottom: 15px;
 }
 .pass-card-left-block{
@@ -104,12 +105,15 @@ body{
     font-family: 'DM Sans', sans-serif;
     right: 15px;
     position: absolute;
+    align-items: center;
 }
 .trash-button{
     stroke: white;
     stroke-width: 1px;
     margin-left: 3px;
     cursor: pointer;
+    border: none;
+    background: none;
 }
 .pass-minus-button{
     margin: 0 7px;
@@ -132,21 +136,15 @@ body{
 .clearButton{
     color: #0000b4;
     height: 35px;
+    width: 100%;
     align-content: center;
+    font-family: 'Dela Gothic One', sans-serif;
     background-color: white;
     font-size: 16px;
     margin-bottom: 19px;
     cursor: pointer;
 }
 
-.AcceptButton{
-    background-color: #0000b4;
-    color: white;
-    align-content: center;
-    font-size: 36px;
-    height: 55px;
-    cursor: pointer;
-}
 
 /* Для инпутов - сохраняем оригинальный стиль */
 input.PassInputField {
@@ -159,6 +157,7 @@ input.PassInputField {
     height: 32px;
     padding-left: 5px;
     border: none;
+    border-radius: 0;
 }
 
 /* Для кнопок в форме */
@@ -166,8 +165,9 @@ button.AcceptButton {
     border: none;
     background-color: #0000b4;
     color: white;
-    font-size: 36px;
     height: 55px;
+    font-size: 36px;
+    font-family: 'Dela Gothic One', sans-serif;
     cursor: pointer;
     width: 100%;
 }

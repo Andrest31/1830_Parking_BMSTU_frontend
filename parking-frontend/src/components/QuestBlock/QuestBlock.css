@@ -21,12 +21,19 @@
     display: block;
 }
 .quest-item{
-    display: flex;
+    display: block;
     gap: 0px;
+    margin: 0 160px 15px 0;
     font-family: 'DM Sans', sans-serif;
-    margin-bottom: 15px;
-    font-size: 24px;
     align-items: center;
+}
+.question{
+    font-size: 24px;
+}
+.answer{
+    font-size: 16px;
+    white-space: normal;
+    color: #6b6666;
 }
 .quest-btn{
     width: 15px;

@@ -13,25 +13,29 @@ const QuestBlock = () => {
           </div>
           <div className="quest-block">
             <div className="quest-item">
-              <div className="quest-btn">+</div>
-              <div className="quest">Сколько мест закрепляется за одним сотрудником?</div>
+              <div className="question">Сколько мест закрепляется за одним сотрудником?</div>
+              <div className="answer">Вы можете бронировать любое количество мест</div>
             </div>
 
             <div className="quest-item">
-              <div className="quest-btn">+</div>
-              <div className="quest">Как происходит оплата?</div>
+              <div className="question">Как происходит оплата?</div>
+                            <div className="answer">Безналичной оплатой в течении 15 минут после формирования заявки</div>
+
             </div>
             <div className="quest-item">
-              <div className="quest-btn">+</div>
-              <div className="quest">Как проехать на парковку?</div>
+              <div className="question">Как проехать на парковку?</div>
+                            <div className="answer">Показать QR Code, который будет выслан на почту</div>
+
             </div>
             <div className="quest-item">
-              <div className="quest-btn">+</div>
-              <div className="quest">Можно ли оформить платеж в рассрочку?</div>
+              <div className="question">Можно ли оформить платеж в рассрочку?</div>
+                            <div className="answer">Только полный единоразовый платеж</div>
+
             </div>
             <div className="quest-item">
-              <div className="quest-btn">+</div>
-              <div className="quest">Можно ли отменить абонемент?</div>
+              <div className="question">Можно ли отменить абонемент?</div>
+                            <div className="answer">Если QR Code не был использован</div>
+
             </div>
           </div>
         </div>
