@@ -50,7 +50,10 @@ body{
     color: black;
     text-decoration: none;
 }
-.profile{
+.navbar-item:hover{
+    color:var(--primary-color);
+}
+.profile, .logout{
     height: 22px;
 }
 .profile-button{

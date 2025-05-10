@@ -2,6 +2,7 @@ import { Link, NavLink } from "react-router-dom";
 import "./Header.css";
 import BMSTU_Logo from "../../assets/BMSTU_Logo.svg"; // Импортируем изображения
 import ProfileIcon from "../../assets/Profile.svg";
+import Logouticon from "../../assets/exit2.svg"
 
 const Header = () => {
   return (
@@ -18,6 +19,15 @@ const Header = () => {
 
         <nav className="navbar">
           <NavLink 
+            to="/list" 
+            className={({ isActive }) => 
+              `navbar-item ${isActive ? "active" : ""}`
+            }
+          >
+            Абонементы
+          </NavLink>
+
+          <NavLink 
             to="/parkings" 
             className={({ isActive }) => 
               `navbar-item ${isActive ? "active" : ""}`
@@ -25,9 +35,34 @@ const Header = () => {
           >
             Парковки
           </NavLink>
-          <button className="profile-button">
+
+          <NavLink 
+            to="/profile" 
+            className={({ isActive }) => 
+              `navbar-item ${isActive ? "active" : ""}`
+            }
+          >
+            Профиль
+          </NavLink>
+
+          <NavLink 
+            to="/authorize" 
+            className={({ isActive }) => 
+              `navbar-item ${isActive ? "active" : ""}`
+            }
+          >
             <img src={ProfileIcon} alt="Профиль" className="profile" />
-          </button>
+          </NavLink>
+
+          <NavLink 
+            to="/logout" 
+            className={({ isActive }) => 
+              `navbar-item ${isActive ? "active" : ""}`
+            }
+          >
+            <img src={Logouticon} alt="Выход" className="logout" />
+          </NavLink>
+
         </nav>
       </div>
 
