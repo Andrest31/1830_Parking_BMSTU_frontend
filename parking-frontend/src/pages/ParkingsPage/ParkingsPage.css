@@ -1,6 +1,7 @@
 body{
-    width: 1520px;
     margin: 0;
+        width: 100%;
+    overflow-x: hidden;
 }
 
 .mainpage{
@@ -16,8 +17,8 @@ body{
 .title-content{
     display:flex;
     margin-bottom: 60px;
-    margin-left: 160px;
-    margin-right: 160px;
+    margin-left: 10.417vw;
+    margin-right: 10.417vw;
 }
 .title-items-container{
     display: block;
@@ -68,6 +69,7 @@ body{
 }
 .Rent_line{
     display: flex;
+    position: relative;
 }
 .Rent_title{
     font-size: 40px;
@@ -76,8 +78,8 @@ body{
 }
 .Pass-button{
     width: 40px;
-    position: relative;
-    right: -805px;
+    position: absolute;
+    right: 0px;
     margin-top: 15px;
     cursor: pointer;
 }
@@ -86,7 +88,7 @@ body{
 }
 
 .catalog{
-    margin: 0 160px;
+    margin: 0 10.417vw;
 }
 .catalog-content{
     display: flex;

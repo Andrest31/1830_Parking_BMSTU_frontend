@@ -270,7 +270,7 @@ const PassPage: React.FC = () => {
                   disabled={updatingFields.includes('user_name')}
                   required
                 />
-                {updatingFields.includes('user_name') && <span className="saving-indicator"><Loader/></span>}
+                {updatingFields.includes('user_name') && <span className="saving-indicator">Сохраняем..</span>}
 
                 <div className="PassPageDiscription">Гос номер ТС</div>
                 <input
@@ -281,7 +281,7 @@ const PassPage: React.FC = () => {
                   disabled={updatingFields.includes('state_number')}
                   required
                 />
-                {updatingFields.includes('state_number') && <span className="saving-indicator"><Loader/></span>}
+                {updatingFields.includes('state_number') && <span className="saving-indicator">Сохраняем..</span>}
 
                 <div className="PassPageDiscription">Срок действия абонемента</div>
                 <input
@@ -292,7 +292,7 @@ const PassPage: React.FC = () => {
                   disabled={updatingFields.includes('deadline')}
                   required
                 />
-                {updatingFields.includes('deadline') && <span className="saving-indicator"><Loader/></span>}
+                {updatingFields.includes('deadline') && <span className="saving-indicator">Сохраняем..</span>}
               </div>
 
               <div className="right-block">

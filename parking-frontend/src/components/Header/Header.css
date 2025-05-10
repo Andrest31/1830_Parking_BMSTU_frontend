@@ -12,7 +12,7 @@ body{
     font-size: 12px;
     background-color: white;
     height: 44px;
-    margin: 0px 39px;
+    margin: 0 2.54vw;
     display: flex;
     font-family: 'Dela Gothic One', sans-serif;
 }

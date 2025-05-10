@@ -1,6 +1,7 @@
 body{
-    width: 1520px;
     margin: 0;
+    width: 100%;
+
 }
 .HelloPage{
     position: relative;
@@ -26,7 +27,7 @@ body{
 }
 
 .HelloPage-Content{
-    margin-left: 160px;
+    margin: 0 10.417vw;
     font-family: 'Dela Gothic One', sans-serif;
     margin-top: -740px;
     position: absolute;
@@ -35,7 +36,7 @@ body{
 }
 
 .subscribe{
-    margin-left: 160px;
+    margin: 0 10.417vw;
 }
 .subscribe-title{
     font-family: 'Dela Gothic One', sans-serif;

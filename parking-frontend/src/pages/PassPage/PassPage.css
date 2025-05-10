@@ -1,12 +1,16 @@
 body{
-    width: 1520px;
+    width: 100%;
     margin: 0;
 }
 .Pass-Page{
     position: relative;
     height: 806px;
 }
-
+.saving-indicator{
+    font-size: 12px;
+    font-family: 'DM Sans';
+    margin-left: 20px;
+}
 .PassPage-img{
     width: 100%;
     height: 806px;
@@ -25,7 +29,7 @@ body{
     border-radius: 4px;
 }
 .PassPage-Content{
-    margin-left: 160px;
+    margin: 0 10.417vw;
     font-family: 'Dela Gothic One', sans-serif;
     margin-top: -740px;
     position: absolute;
