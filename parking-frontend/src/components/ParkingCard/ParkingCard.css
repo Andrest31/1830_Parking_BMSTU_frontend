@@ -11,15 +11,15 @@
     margin-left: 17px;
 }
 .parking-place{
-    font-size: 14px;
+    font-size: var(--s-size);;
     margin-left: 17px;
-    color: #6b6666;
+    color: var(--secondary-color);
     margin-bottom: 25px;
 }
 .parking-worktime{
     margin-bottom: 25px;
     margin-left: 17px;
-    font-size: 24px;
+    font-size: var(--ml-size);;
 }
 .card-button{
     width: 121px;
@@ -28,7 +28,7 @@
     height: 29px;
     border-radius: 20px;
     border: black 1px solid;
-    font-size: 14px;
+    font-size: var(--s-size);;
     align-content: center;
     text-align: center;
     background-color: white;
@@ -57,7 +57,7 @@
     width: 58px;
     border-radius: 20px;
     border: black 1px solid;
-    font-size: 14px;
+    font-size: var(--s-size);;
     align-content: center;
     text-align: center;
     align-self: center;
@@ -66,9 +66,9 @@
     height: 26px;
     width: 116px;
     border-radius: 20px;
-    border: #0000b4 1px solid;
-    color: #0000b4;
-    font-size: 14px;
+    border: var(--primary-color) 1px solid;
+    color: var(--primary-color);
+    font-size: var(--s-size);
     align-content: center;
     text-align: center;
     cursor: pointer;
@@ -76,5 +76,5 @@
     text-decoration: none;
 }
 .add_to_o_btn{
-    color: #0000b4;
+    color: var(--primary-color);
 }

@@ -5,6 +5,7 @@ import ParkingPage from './pages/ParkingPage/ParkingPage';
 import HelloPage from './pages/HelloPage/HelloPage';
 import PassPage from './pages/PassPage/PassPage';
 import ScrollToTop from './components/ScrollToTop/ScrollToTop';
+import "./index.css"
 
 function App() {
   return (

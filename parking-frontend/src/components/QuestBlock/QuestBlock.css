@@ -1,9 +1,9 @@
 .quest{
-    margin: 0 10.417vw;
+    margin: 0 var(--spacing-default);
 }
 .quest-title{
-    font-size: 40px;
-    font-family: 'Dela Gothic One', sans-serif;
+    font-size: var(--xl-size);;
+    font-family: var(--dela);
     color: black;
     margin-top: 40px;
 }
@@ -24,23 +24,23 @@
     display: block;
     gap: 0px;
     margin: 0 160px 15px 0;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--dm-sans);
     align-items: center;
 }
 .question{
-    font-size: 24px;
+    font-size: var(--ml-size);;
 }
 .answer{
-    font-size: 16px;
+    font-size: var(--xm-size);;
     white-space: normal;
-    color: #6b6666;
+    color: var(--secondary-color);
 }
 .quest-btn{
     width: 15px;
     height: 15px;
     border-radius: 4px;
     text-align: center;
-    font-size: 12px;
+    font-size: var(--xs-size);;
     border: black 1px solid;
     cursor: pointer;
 }

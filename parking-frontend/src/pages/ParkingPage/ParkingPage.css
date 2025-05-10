@@ -15,9 +15,9 @@ body{
     object-fit: cover;
 }
 .parking-title{
-    margin: 0 10.417vw;
-    font-size: 48px;
-    font-family: 'Dela Gothic One', sans-serif;
+    margin: 0 var(--spacing-default);
+    font-size: var(--xxl-size);
+    font-family: var(--dela);
     margin-top: -220px;
     position: absolute;
     color: white;
@@ -25,7 +25,7 @@ body{
 
 .parking-info{
     height: 270px;
-    margin: 0 10.417vw 65px 10.417vw;
+    margin: 0 var(--spacing-default) 65px var(--spacing-default);
 }
 .parking-info-cards{
     align-self: center;
@@ -44,29 +44,29 @@ body{
 }
 .info-card-title{
     font-size: 28px;
-    font-family: 'Dela Gothic One', sans-serif;
-    color: #0000b4;
+    font-family: var(--dela);
+    color: var(--primary-color);
     margin-top: 25px;
     margin-left: 27px;
 }
 .info-card-discription{
-    font-size: 24px;
-    font-family: 'DM Sans', sans-serif;
+    font-size: var(--m-size);
+    font-family: var(--dm-sans);
     margin-left: 27px;
     width: 300px;
     margin-top: 20px;
 }
 .parking-add-button{
-    font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
-    color: #0000b4;
+    font-size: var(--s-size);;
+    font-family: var(--dm-sans);
+    color: var(--primary-color);
     height: 29px;
     width: 176px;
     border-radius: 20px;
-    border: #0000b4 1px solid;
+    border: var(--primary-color) 1px solid;
     text-align: center;
     align-content: center;
-    margin-right: 10.417vw;
+    margin-right: var(--spacing-default);
     right: 0;
     position: absolute;
     cursor: pointer;

@@ -46,7 +46,7 @@ section .preloader span::before {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #5421fc;
+    background: var(--primary-color);
     animation: animate 2s linear infinite;
     animation-delay: calc(0.1s * var(--i))
 }

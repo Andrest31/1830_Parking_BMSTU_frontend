@@ -8,7 +8,7 @@ body{
 }
 .saving-indicator{
     font-size: 12px;
-    font-family: 'DM Sans';
+    font-family: var(--dm-sans);
     margin-left: 20px;
 }
 .PassPage-img{
@@ -25,12 +25,12 @@ body{
     width: 100%;
     padding: 8px;
     margin-bottom: 15px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--secondary-color);
     border-radius: 4px;
 }
 .PassPage-Content{
-    margin: 0 10.417vw;
-    font-family: 'Dela Gothic One', sans-serif;
+    margin: 0 var(--spacing-default);
+    font-family: var(--dela);
     margin-top: -740px;
     position: absolute;
     color: white;
@@ -43,26 +43,26 @@ body{
     width: 630px;
 }
 .PassPageTitle{
-    font-family: 'Dela Gothic One', sans-serif;
+    font-family: var(--dela);
     font-size: 40px;
 }
 .PassPageTitleDiscription{
-    font-family: 'DM Sans', sans-serif;
-    font-size: 20px;
+    font-family: var(--dm-sans);
+    font-size: var(--m-size);
     margin-bottom: 18px;
 }
 .PassPageDiscription
 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 20px;
+    font-family: var(--dm-sans);
+    font-size: var(--m-size);;
     margin-bottom: 4px;
 }
 .PassInputField{
-    font-size: 16px;
+    font-size: var(--xm-size);;
     background-color: white;
     width: 360px;
-    color: #6B6666;
-    font-family: 'DM Sans', sans-serif;
+    color: var(--secondary-color);
+    font-family: var(--dm-sans);
     margin-bottom: 7px;
     height: 32px;
     align-content: center;
@@ -77,7 +77,7 @@ body{
     text-align: center;
 }
 .Pass-1830-Logo{
-    font-size: 32px;
+    font-size: var(--l-size);;
     text-align: center;
     height: 78px;
     align-content: center;
@@ -101,12 +101,12 @@ body{
     height: 25px;
 }
 .pass-parking-name{
-    font-size: 16px;
+    font-size: var(--xm-size);
     margin-bottom: 4px;
 }
 .pass-card-right-block{
     display: flex;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--dm-sans);
     right: 15px;
     position: absolute;
     align-items: center;
@@ -138,13 +138,13 @@ body{
     text-align: center;
 }
 .clearButton{
-    color: #0000b4;
+    color: var(--primary-color);
     height: 35px;
     width: 100%;
     align-content: center;
-    font-family: 'Dela Gothic One', sans-serif;
+    font-family: var(--dela);
     background-color: white;
-    font-size: 16px;
+    font-size: var(--xm-size);;
     margin-bottom: 19px;
     cursor: pointer;
 }
@@ -152,11 +152,11 @@ body{
 
 /* Для инпутов - сохраняем оригинальный стиль */
 input.PassInputField {
-    font-size: 16px;
+    font-size: var(--xm-size);;
     background-color: white;
     width: 360px;
     color: #6B6666;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--dm-sans);
     margin-bottom: 7px;
     height: 32px;
     padding-left: 5px;
@@ -167,11 +167,11 @@ input.PassInputField {
 /* Для кнопок в форме */
 button.AcceptButton {
     border: none;
-    background-color: #0000b4;
+    background-color: var(--primary-color);
     color: white;
     height: 55px;
-    font-size: 36px;
-    font-family: 'Dela Gothic One', sans-serif;
+    font-size: var(--l-size);;
+    font-family: var(--dela);
     cursor: pointer;
     width: 100%;
 }

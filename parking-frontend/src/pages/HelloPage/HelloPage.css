@@ -12,23 +12,23 @@ body{
     height: 693px;
 }
 .HelloPageTitle{
-    font-family: 'Dela Gothic One', sans-serif;
-    font-size: 48px;
+    font-family: var(--dela);
+    font-size: var(--xxl-size);
     text-align: center;
     margin-top: 240px;
     margin-bottom: 70px;
 }
 .HelloPageTitleDiscription{
-    font-family: 'DM Sans', sans-serif;
-    font-size: 20px;
+    font-family: var(--dm-sans);
+    font-size: var(--m-size);
     margin-bottom: 18px;
     height: 175px;
     margin: 0 280px;
 }
 
 .HelloPage-Content{
-    margin: 0 10.417vw;
-    font-family: 'Dela Gothic One', sans-serif;
+    margin: 0 var(--spacing-default);
+    font-family: var(--dela);
     margin-top: -740px;
     position: absolute;
     color: white;
@@ -36,18 +36,18 @@ body{
 }
 
 .subscribe{
-    margin: 0 10.417vw;
+    margin: 0 var(--spacing-default);
 }
 .subscribe-title{
-    font-family: 'Dela Gothic One', sans-serif;
-    font-size: 24px;
+    font-family: var(--dela);
+    font-size: var(--ml-size);;
     margin-top: 150px;
-    color: #0000b4;
+    color: var(--primary-color);
     margin-bottom: 25px;
 }
 .subscribe-block{
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
+    font-family: var(--dm-sans);
+    font-size: var(--xm-size);;
     height: 34px;
     display: flex;
     gap: 18px;
@@ -57,7 +57,7 @@ body{
     width: 299px;
     align-content: center;
     border: black 1px solid;
-    color: #6B6666;
+    color: var(--primary-color);
     padding-left: 16px;
     border-radius: 20px;
 }
