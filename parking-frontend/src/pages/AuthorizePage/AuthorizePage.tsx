@@ -50,10 +50,13 @@ const AuthorizePage: React.FC = () => {
     if (errors.username || errors.password) return;
     
     try {
-      await dispatch(login(loginData)).unwrap();
-      navigate('/');
+      const result = await dispatch(login(loginData));
+      if (login.fulfilled.match(result)) {
+        navigate('/');
+      }
     } catch (err) {
       console.log(`${err}`)
+      // Ошибка уже обработана в authSlice
     }
   };
 
