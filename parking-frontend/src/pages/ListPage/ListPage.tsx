@@ -1,20 +1,24 @@
 import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../utils/hooks";
 import { fetchUserOrders } from "../../utils/ordersSlice";
+import { useNavigate } from "react-router-dom";
 import "./ListPage.css";
 
 const UserRequests: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { orders, loading, error } = useAppSelector(state => state.orders);
   const { token } = useAppSelector(state => state.auth);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     if (token) {
-      
       dispatch(fetchUserOrders());
     }
   }, [dispatch, token]);
+
+  const handleRowClick = (orderId: number) => {
+    navigate(`/pass/${orderId}`); // Переход на страницу заявки
+  };
 
   if (!token) {
     return (
@@ -24,13 +28,8 @@ const UserRequests: React.FC = () => {
     );
   }
 
-  if (loading) {
-    return <div>Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div>Ошибка: {error}</div>;
-  }
+  if (loading) return <div>Загрузка...</div>;
+  if (error) return <div>Ошибка: {error}</div>;
 
   return (
     <div className="user-requests">
@@ -51,31 +50,35 @@ const UserRequests: React.FC = () => {
               <th>Статус</th>
             </tr>
           </thead>
-           <tbody>
-        {orders.map((order) => (
-          <tr key={order.id}>
-            <td>{new Date(order.created_at).toLocaleDateString()}</td>
-            <td>{order.deadline ? new Date(order.deadline).toLocaleDateString() : '-'}</td>
-            <td>{order.full_name}</td>
-            <td>{order.car_number}</td>
-            <td>
-              {order.items.map((item) => (  // Используем items вместо parkings
-                <div key={item.id}>
-                  {item.parking.name} — {item.quantity} шт.
-                </div>
-              ))}
-            </td>
-            <td>
-              {order.items.reduce((sum, item) => sum + item.quantity, 0)}
-            </td>
-            <td>
-              <span className={`status ${order.status.toLowerCase()}`}>
-                {order.status}
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
+          <tbody>
+            {orders.map((order) => (
+              <tr 
+                key={order.id} 
+                onClick={() => handleRowClick(order.id)}
+                className="user-requests__row"
+              >
+                <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                <td>{order.deadline ? new Date(order.deadline).toLocaleDateString() : '-'}</td>
+                <td>{order.full_name}</td>
+                <td>{order.car_number}</td>
+                <td>
+                  {order.items.map((item) => (
+                    <div key={item.id}>
+                      {item.parking.short_name || item.parking.name} — {item.quantity} шт.
+                    </div>
+                  ))}
+                </td>
+                <td>
+                  {order.items.reduce((sum, item) => sum + item.quantity, 0)}
+                </td>
+                <td>
+                  <span className={`status ${order.status.toLowerCase()}`}>
+                    {order.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       )}
     </div>

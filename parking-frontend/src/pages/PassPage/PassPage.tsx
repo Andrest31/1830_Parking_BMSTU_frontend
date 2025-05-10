@@ -15,6 +15,7 @@ const PassPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [updatingParkings, setUpdatingParkings] = useState<number[]>([]);
   const [updatingFields, setUpdatingFields] = useState<string[]>([]);
+  const isDraft = order?.status === 'draft';
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -267,7 +268,7 @@ const PassPage: React.FC = () => {
                   className="PassInputField"
                   defaultValue={order.user_name}
                   onBlur={(e) => handleFieldBlur('user_name', e)}
-                  disabled={updatingFields.includes('user_name')}
+                  disabled={updatingFields.includes('user_name') || !isDraft}
                   required
                 />
                 {updatingFields.includes('user_name') && <span className="saving-indicator">Сохраняем..</span>}
@@ -278,7 +279,7 @@ const PassPage: React.FC = () => {
                   className="PassInputField"
                   defaultValue={order.state_number}
                   onBlur={(e) => handleFieldBlur('state_number', e)}
-                  disabled={updatingFields.includes('state_number')}
+                  disabled={updatingFields.includes('state_number') || !isDraft}
                   required
                 />
                 {updatingFields.includes('state_number') && <span className="saving-indicator">Сохраняем..</span>}
@@ -289,7 +290,7 @@ const PassPage: React.FC = () => {
                   className="PassInputField"
                   defaultValue={order.deadline}
                   onBlur={(e) => handleFieldBlur('deadline', e)}
-                  disabled={updatingFields.includes('deadline')}
+                  disabled={updatingFields.includes('deadline') || !isDraft}
                   required
                 />
                 {updatingFields.includes('deadline') && <span className="saving-indicator">Сохраняем..</span>}
@@ -319,7 +320,7 @@ const PassPage: React.FC = () => {
                               type="button" 
                               className="pass-minus-button"
                               onClick={() => handleQuantityChange(parkingId, -1)}
-                              disabled={updatingParkings.includes(parkingId) || item.quantity <= 1}
+                              disabled={updatingParkings.includes(parkingId) || item.quantity <= 1 || !isDraft}
                             >
                               -
                             </button>
@@ -329,7 +330,7 @@ const PassPage: React.FC = () => {
                               type="button" 
                               className="pass-minus-button"
                               onClick={() => handleQuantityChange(parkingId, 1)}
-                              disabled={updatingParkings.includes(parkingId)}
+                              disabled={updatingParkings.includes(parkingId) || !isDraft} 
                             >
                               +
                             </button>
@@ -337,7 +338,8 @@ const PassPage: React.FC = () => {
                               type="button"
                               onClick={() => handleRemoveItem(parkingId)}
                               className="trash-button"
-                              disabled={updatingParkings.includes(parkingId)}
+                              disabled={updatingParkings.includes(parkingId) || !isDraft}
+                              
                             >
                               <img src={TrashIcon} alt="Удалить" />
                             </button>
@@ -359,10 +361,11 @@ const PassPage: React.FC = () => {
                 type="button" 
                 className="clearButton"
                 onClick={handleClearOrder}
+                disabled={!isDraft}
               >
                 Очистить
               </button>
-              <button type="submit" className="AcceptButton">
+              <button type="submit" className="AcceptButton" disabled={!isDraft}>
                 Принять
               </button>
             </div>
