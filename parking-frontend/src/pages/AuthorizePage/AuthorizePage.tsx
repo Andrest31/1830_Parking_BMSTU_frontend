@@ -23,6 +23,7 @@ const AuthorizePage: React.FC = () => {
     password: '',
     confirmPassword: '',
   });
+  
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginData({
@@ -53,6 +54,7 @@ const AuthorizePage: React.FC = () => {
       const result = await dispatch(login(loginData));
       if (login.fulfilled.match(result)) {
         navigate('/');
+        console.log(localStorage.getItem('token'));
       }
     } catch (err) {
       console.log(`${err}`)

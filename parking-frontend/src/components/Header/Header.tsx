@@ -1,10 +1,13 @@
 import { Link, NavLink } from "react-router-dom";
+import { useAppSelector } from "../../utils/hooks";
 import "./Header.css";
-import BMSTU_Logo from "../../assets/BMSTU_Logo.svg"; // Импортируем изображения
+import BMSTU_Logo from "../../assets/BMSTU_Logo.svg";
 import ProfileIcon from "../../assets/Profile.svg";
-import Logouticon from "../../assets/exit2.svg"
+import Logouticon from "../../assets/exit2.svg";
 
 const Header = () => {
+  const { token } = useAppSelector(state => state.auth);
+
   return (
     <header className="header_line">
       <div className="header_content">
@@ -18,14 +21,16 @@ const Header = () => {
         </div>
 
         <nav className="navbar">
-          <NavLink 
-            to="/list" 
-            className={({ isActive }) => 
-              `navbar-item ${isActive ? "active" : ""}`
-            }
-          >
-            Абонементы
-          </NavLink>
+          {token && (
+            <NavLink 
+              to="/list" 
+              className={({ isActive }) => 
+                `navbar-item ${isActive ? "active" : ""}`
+              }
+            >
+              Абонементы
+            </NavLink>
+          )}
 
           <NavLink 
             to="/parkings" 
@@ -37,16 +42,7 @@ const Header = () => {
           </NavLink>
 
           <NavLink 
-            to="/profile" 
-            className={({ isActive }) => 
-              `navbar-item ${isActive ? "active" : ""}`
-            }
-          >
-            Профиль
-          </NavLink>
-
-          <NavLink 
-            to="/authorize" 
+            to={token ? "/profile" : "/authorize"} 
             className={({ isActive }) => 
               `navbar-item ${isActive ? "active" : ""}`
             }
@@ -54,18 +50,18 @@ const Header = () => {
             <img src={ProfileIcon} alt="Профиль" className="profile" />
           </NavLink>
 
-          <NavLink 
-            to="/logout" 
-            className={({ isActive }) => 
-              `navbar-item ${isActive ? "active" : ""}`
-            }
-          >
-            <img src={Logouticon} alt="Выход" className="logout" />
-          </NavLink>
-
+          {token && (
+            <NavLink 
+              to="/logout" 
+              className={({ isActive }) => 
+                `navbar-item ${isActive ? "active" : ""}`
+              }
+            >
+              <img src={Logouticon} alt="Выход" className="logout" />
+            </NavLink>
+          )}
         </nav>
       </div>
-
     </header>
   );
 };
