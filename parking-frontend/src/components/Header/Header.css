@@ -55,6 +55,7 @@ body{
 }
 .profile, .logout{
     height: 22px;
+    cursor: pointer;
 }
 .profile-button{
     background: none; /* Убираем серый фон */

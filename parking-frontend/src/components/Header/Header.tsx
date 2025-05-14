@@ -1,12 +1,34 @@
-import { Link, NavLink } from "react-router-dom";
-import { useAppSelector } from "../../utils/hooks";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../utils/hooks";
+import { logout } from "../../utils/authSlice";
 import "./Header.css";
 import BMSTU_Logo from "../../assets/BMSTU_Logo.svg";
 import ProfileIcon from "../../assets/Profile.svg";
 import Logouticon from "../../assets/exit2.svg";
+import apiClient from "../../utils/apiClient";
 
 const Header = () => {
   const { token } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      // Отправляем запрос на бекенд для выхода
+      await apiClient.post("/users/logout/");
+      
+      // Очищаем стор и localStorage
+      dispatch(logout());
+      
+      // Перенаправляем на главную страницу
+      navigate("/");
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      // В любом случае выполняем логаут на клиенте
+      dispatch(logout());
+      navigate("/");
+    }
+  };
 
   return (
     <header className="header_line">
@@ -51,14 +73,12 @@ const Header = () => {
           </NavLink>
 
           {token && (
-            <NavLink 
-              to="/logout" 
-              className={({ isActive }) => 
-                `navbar-item ${isActive ? "active" : ""}`
-              }
+            <div 
+              onClick={handleLogout}
+              className="navbar-item logout-button"
             >
               <img src={Logouticon} alt="Выход" className="logout" />
-            </NavLink>
+            </div>
           )}
         </nav>
       </div>

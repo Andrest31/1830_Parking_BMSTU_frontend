@@ -10,6 +10,15 @@ export interface Parking {
     description: string;
     is_active: boolean;
   }
+
+  export interface User {
+  id: number;
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  is_staff?: boolean;
+}
   
   export interface OrderData {
     order_id?: number;
@@ -41,6 +50,7 @@ export interface Parking {
     state_number: string;
     deadline: string;
     status: string;
+    user_id: number;
     created_at: string;
     items: OrderItem[];
   }
