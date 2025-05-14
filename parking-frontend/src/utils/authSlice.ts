@@ -2,24 +2,28 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'http://localhost:8000';
 
 interface AuthState {
-  user: { username: string } | null;
-  token: string | null;
+  user: { 
+    username: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    car_number?: string;
+  } | null;
+  access: string | null;
+  refresh: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  email?: string;
-  first_name?: string;
-  last_name?: string;
-  car_number?: string;
 }
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  access: localStorage.getItem('access_token'),
+  refresh: localStorage.getItem('refresh_token'),
+  isAuthenticated: !!localStorage.getItem('access_token'),
   isLoading: false,
   error: null,
 };
@@ -28,14 +32,15 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { username: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/users/login/`, credentials);
+      const response = await axios.post(`${API_URL}/api/users/login/`, credentials);
       return {
-        token: response.data.token,
+        access: response.data.access,
+        refresh: response.data.refresh,
         username: credentials.username
       };
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data?.error || 'Ошибка авторизации');
+        return rejectWithValue(error.response?.data?.detail || 'Ошибка авторизации');
       }
       return rejectWithValue('Неизвестная ошибка');
     }
@@ -46,6 +51,7 @@ export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
+      // Если нужно инвалидировать токен на сервере, добавьте соответствующий эндпоинт
       await apiClient.post('/users/logout/');
       return true;
     } catch (error) {
@@ -62,10 +68,12 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout(state) {
-      state.token = null;
+      state.access = null;
+      state.refresh = null;
       state.user = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
     }
   },
   extraReducers: (builder) => {
@@ -76,20 +84,24 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.token = action.payload.token;
+        state.access = action.payload.access;
+        state.refresh = action.payload.refresh;
         state.user = { username: action.payload.username };
         state.isAuthenticated = true;
-        localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('access_token', action.payload.access);
+        localStorage.setItem('refresh_token', action.payload.refresh);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
       .addCase(logoutUser.fulfilled, (state) => {
-        state.token = null;
+        state.access = null;
+        state.refresh = null;
         state.user = null;
         state.isAuthenticated = false;
-        localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
       });
   }
 });

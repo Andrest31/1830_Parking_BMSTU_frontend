@@ -42,25 +42,37 @@ const ParkingsPage = () => {
 
   useEffect(() => {
     const fetchParkings = async () => {
-      try {
-        const response = await fetch('/api/parkings/');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data: ParkingResponse = await response.json();
-        setParkings(data.parkings);
-        setFilteredParkings(data.parkings);
-        
-        // Сохраняем ID черновика, если он есть
-        if (data.draft_order) {
-          setDraftOrderId(data.draft_order.order_id);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
+  try {
+    const token = localStorage.getItem('access_token');
+    const response = await fetch('/api/parkings/', {
+      headers: {
+        'Authorization': `Bearer ${token}`  // Добавляем JWT-токен
       }
-    };
+    });
+
+    if (!response.ok) {
+      // Если статус 401 - токен невалидный или просрочен
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.reload();  // Перенаправляем на логин
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: ParkingResponse = await response.json();
+    setParkings(data.parkings);
+    setFilteredParkings(data.parkings);
+    
+    if (data.draft_order) {
+      setDraftOrderId(data.draft_order.order_id);
+    }
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+  } finally {
+    setLoading(false);
+  }
+};
   
     fetchParkings();
   }, []);

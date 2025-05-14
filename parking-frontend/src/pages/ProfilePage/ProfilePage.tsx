@@ -15,7 +15,7 @@ interface UserData {
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = useSelector((state: RootState) => state.auth.access);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
