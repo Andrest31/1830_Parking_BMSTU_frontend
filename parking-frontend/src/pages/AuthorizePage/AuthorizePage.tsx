@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../utils/hooks';
-import { login } from '../../utils/authSlice';
+import { login, register } from '../../utils/authSlice';
 import { useNavigate } from 'react-router-dom';
 import styles from './AuthorizePage.module.scss';
 
@@ -14,16 +14,15 @@ const AuthorizePage: React.FC = () => {
   const [loginErrors, setLoginErrors] = useState({ username: '', password: '' });
 
   const [signUpData, setSignUpData] = useState({ 
-    email: '', 
+    username: '', 
     password: '', 
     confirmPassword: '' 
   });
-  const [signUpErrors] = useState({
-    email: '',
+  const [signUpErrors, setSignUpErrors] = useState({
+    username: '',
     password: '',
     confirmPassword: '',
   });
-  
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginData({
@@ -54,17 +53,49 @@ const AuthorizePage: React.FC = () => {
       const result = await dispatch(login(loginData));
       if (login.fulfilled.match(result)) {
         navigate('/');
-        console.log(localStorage.getItem('token'));
       }
     } catch (err) {
-      console.log(`${err}`)
-      // Ошибка уже обработана в authSlice
+      console.error(err);
     }
   };
 
-  const handleSignUpSubmit = (e: React.FormEvent) => {
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика регистрации
+    
+    // Валидация
+    const errors = { 
+      username: '', 
+      password: '', 
+      confirmPassword: '' 
+    };
+    
+    if (!signUpData.username) errors.username = 'Введите логин';
+    if (!signUpData.password) errors.password = 'Введите пароль';
+    if (signUpData.password !== signUpData.confirmPassword) {
+      errors.confirmPassword = 'Пароли не совпадают';
+    }
+    
+    setSignUpErrors(errors);
+    if (errors.username || errors.password || errors.confirmPassword) return;
+    
+    try {
+      const result = await dispatch(register({
+        username: signUpData.username,
+        password: signUpData.password,
+        password2: signUpData.confirmPassword
+      }));
+      
+      if (register.fulfilled.match(result)) {
+        // Автоматически входим после регистрации
+        await dispatch(login({
+          username: signUpData.username,
+          password: signUpData.password
+        }));
+        navigate('/');
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -134,15 +165,15 @@ const AuthorizePage: React.FC = () => {
             <form className={styles.form} onSubmit={handleSignUpSubmit}>
               <h2 className={styles.formTitle}>Регистрация</h2>
               <div className={styles.inputBlock}>
-                <label htmlFor="signup-email">Email</label>
+                <label htmlFor="signup-username">Логин</label>
                 <input
-                  id="signup-email"
-                  name="email"
-                  type="email"
-                  value={signUpData.email}
+                  id="signup-username"
+                  name="username"
+                  type="text"
+                  value={signUpData.username}
                   onChange={handleSignUpChange}
                 />
-                {signUpErrors.email && <span className={styles.error}>{signUpErrors.email}</span>}
+                {signUpErrors.username && <span className={styles.error}>{signUpErrors.username}</span>}
               </div>
               <div className={styles.inputBlock}>
                 <label htmlFor="signup-password">Пароль</label>
@@ -168,8 +199,13 @@ const AuthorizePage: React.FC = () => {
                   <span className={styles.error}>{signUpErrors.confirmPassword}</span>
                 )}
               </div>
-              <button type="submit" className={styles.AcceptButton}>
-                Принять
+              {error && <div className={styles.apiError}>{error}</div>}
+              <button 
+                type="submit" 
+                className={styles.AcceptButton}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
               </button>
             </form>
           </div>

@@ -21,7 +21,7 @@ const UserRequests: React.FC = () => {
   }, [dispatch, access, isAuthenticated, navigate]);
 
   const handleRowClick = (orderId: number) => {
-    navigate(`/pass/${orderId}`);
+    navigate(`/pass/${orderId}`, { state: { fromListPage: true } });
   };
 
   if (!isAuthenticated) {

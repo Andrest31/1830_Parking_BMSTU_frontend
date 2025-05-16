@@ -47,6 +47,30 @@ export const login = createAsyncThunk(
   }
 );
 
+export const register = createAsyncThunk(
+  'auth/register',
+  async (credentials: { username: string; password: string; password2: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/users/register/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return rejectWithValue(errorData);
+      }
+      
+      return await response.json();
+    } catch {
+      return rejectWithValue("errorData");
+    }
+  }
+);
+
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {

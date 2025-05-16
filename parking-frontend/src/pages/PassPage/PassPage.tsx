@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import TrashIcon from '../../assets/trash.svg';
 import { RootState } from '../../utils/store';
@@ -12,13 +12,16 @@ import { OrderDetail } from '../../types';
 const PassPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { access: token, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingParkings, setUpdatingParkings] = useState<number[]>([]);
   const [updatingFields, setUpdatingFields] = useState<string[]>([]);
+  
   const isDraft = order?.status === 'draft';
+  const isViewMode = location.state?.fromListPage || false;
 
   const fetchWithAuth = useCallback(async (url: string, options: RequestInit = {}) => {
     if (!token) {
@@ -73,211 +76,200 @@ const PassPage: React.FC = () => {
     };
 
     fetchOrder();
-  }, [id, token, isAuthenticated, navigate, fetchWithAuth]); // Добавили fetchWithAuth в зависимости
+  }, [id, token, isAuthenticated, navigate, fetchWithAuth]);
 
   const handleFieldBlur = async (field: keyof OrderDetail, e: React.FocusEvent<HTMLInputElement>) => {
-  if (!order) return;
-  
-  const newValue = e.target.value;
-  const prevValue = order[field];
-  
-  if (newValue === prevValue) return;
-  
-  setUpdatingFields(prev => [...prev, field as string]);
-  
-  try {
-    const response = await fetchWithAuth(`/api/orders/${order.id}/update/`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken(),
-      },
-      credentials: 'include',
-      body: JSON.stringify({ [field]: newValue }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Ошибка обновления');
-    }
-
-    const updatedData = await response.json();
-    setOrder(prev => ({ ...prev!, ...updatedData }));
-
-  } catch (err) {
-    console.error('Ошибка обновления:', err);
-    e.target.value = prevValue as string;
-    alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
-  } finally {
-    setUpdatingFields(prev => prev.filter(f => f !== field));
-  }
-};
-
-  
-  const handleQuantityChange = (parkingId: number, delta: number) => {
-  if (!order) return;
-  
-  const currentItem = order.items.find(item => item.parking?.id === parkingId);
-  if (!currentItem) return;
-  
-  const newQuantity = currentItem.quantity + delta;
-  if (newQuantity < 1) return;
-  
-  updateQuantity(parkingId, newQuantity);
-};
-
-const updateQuantity = async (parkingId: number, newQuantity: number) => {
-  if (!order || !parkingId || newQuantity < 1) return;
-
-  setUpdatingParkings(prev => [...prev, parkingId]);
-
-  try {
-    const response = await fetchWithAuth(
-      `/api/orders/${order.id}/items/${parkingId}/`,
-      {
+    if (!order) return;
+    
+    const newValue = e.target.value;
+    const prevValue = order[field];
+    
+    if (newValue === prevValue) return;
+    
+    setUpdatingFields(prev => [...prev, field as string]);
+    
+    try {
+      const response = await fetchWithAuth(`/api/orders/${order.id}/update/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCsrfToken(),
         },
-        body: JSON.stringify({ quantity: newQuantity }),
         credentials: 'include',
+        body: JSON.stringify({ [field]: newValue }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка обновления');
       }
-    );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Ошибка обновления количества');
+      const updatedData = await response.json();
+      setOrder(prev => ({ ...prev!, ...updatedData }));
+
+    } catch (err) {
+      console.error('Ошибка обновления:', err);
+      e.target.value = prevValue as string;
+      alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
+    } finally {
+      setUpdatingFields(prev => prev.filter(f => f !== field));
     }
+  };
 
-    setOrder(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        items: prev.items.map(item => 
-          item.parking?.id === parkingId 
-            ? { ...item, quantity: newQuantity } 
-            : item
-        )
-      };
-    });
-
-  } catch (err) {
-    console.error('Ошибка обновления:', err);
+  const updateQuantity = async (parkingId: number, newQuantity: number) => {
+    if (!order || !parkingId || newQuantity < 1) return;
+  
+    setUpdatingParkings(prev => [...prev, parkingId]);
+  
     try {
+      const response = await fetchWithAuth(
+        `/api/orders/${order.id}/items/${parkingId}/`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ quantity: newQuantity }),
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка обновления количества');
+      }
+  
+      setOrder(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          items: prev.items.map(item => 
+            item.parking?.id === parkingId 
+              ? { ...item, quantity: newQuantity } 
+              : item
+          )
+        };
+      });
+  
+    } catch (err) {
+      console.error('Ошибка обновления:', err);
       const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
       setOrder(freshData);
-    } catch (fetchError) {
-      console.error('Не удалось обновить данные:', fetchError);
+      alert(err instanceof Error ? err.message : 'Не удалось изменить количество');
+    } finally {
+      setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
     }
-    alert(err instanceof Error ? err.message : 'Не удалось изменить количество');
-  } finally {
-    setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
-  }
-};
+  };
+  
+  const handleQuantityChange = (parkingId: number, delta: number) => {
+    if (!order) return;
+    
+    const currentItem = order.items.find(item => item.parking?.id === parkingId);
+    if (!currentItem) return;
+    
+    const newQuantity = currentItem.quantity + delta;
+    if (newQuantity < 1) return;
+    
+    updateQuantity(parkingId, newQuantity);
+  };
 
   const handleRemoveItem = async (parkingId: number) => {
-  if (!order || !window.confirm('Удалить парковку из заявки?')) return;
+    if (!order || !window.confirm('Удалить парковку из заявки?')) return;
+  
+    setUpdatingParkings(prev => [...prev, parkingId]);
+  
+    try {
+      const response = await fetchWithAuth(
+        `/api/orders/${order.id}/items/`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ parking_id: parkingId, order_id: order.id }),
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Не удалось удалить элемент');
+      }
+  
+      setOrder(prev => prev ? {
+        ...prev,
+        items: prev.items.filter(item => item.parking?.id !== parkingId)
+      } : null);
+  
+    } catch (err) {
+      console.error('Ошибка удаления:', err);
+      const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
+      setOrder(freshData);
+      alert(err instanceof Error ? err.message : 'Ошибка удаления');
+    } finally {
+      setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
+    }
+  };
 
-  setUpdatingParkings(prev => [...prev, parkingId]);
-
-  try {
-    const response = await fetchWithAuth(
-      `/api/orders/${order.id}/items/`,
-      {
+  const getCsrfToken = () => {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    return cookieValue || '';
+  };
+    
+  const handleClearOrder = async () => {
+    if (!order || !window.confirm('Вы уверены, что хотите удалить заявку?')) return;
+  
+    try {
+      const response = await fetchWithAuth(`/api/orders/${order.id}/delete/`, {
         method: 'DELETE',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+        credentials: 'include',
+      });
+  
+      if (response.ok) {
+        navigate('/');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Не удалось удалить заявку');
+      }
+    } catch (err) {
+      console.error('Ошибка удаления заявки:', err);
+      alert(err instanceof Error ? err.message : 'Не удалось удалить заявку');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order) return;
+  
+    try {
+      const response = await fetchWithAuth(`/api/orders/${order.id}/submit/`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCsrfToken(),
         },
-        body: JSON.stringify({ parking_id: parkingId, order_id: order.id }),
         credentials: 'include',
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка подтверждения заявки');
       }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Не удалось удалить элемент');
+  
+      navigate('/parkings');
+    } catch (err) {
+      console.error('Ошибка подтверждения заявки:', err);
+      alert(err instanceof Error ? err.message : 'Не удалось отправить заявку');
     }
-
-    setOrder(prev => prev ? {
-      ...prev,
-      items: prev.items.filter(item => item.parking?.id !== parkingId)
-    } : null);
-
-  } catch (err) {
-    console.error('Ошибка удаления:', err);
-    try {
-      const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
-      setOrder(freshData);
-    } catch (fetchError) {
-      console.error('Не удалось обновить данные:', fetchError);
-    }
-    alert(err instanceof Error ? err.message : 'Ошибка удаления');
-  } finally {
-    setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
-  }
-};
-
-  const getCsrfToken = () => {
-      const cookieValue = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-      return cookieValue || '';
-    };
-    
-  const handleClearOrder = async () => {
-  if (!order || !window.confirm('Вы уверены, что хотите удалить заявку?')) return;
-
-  try {
-    const response = await fetchWithAuth(`/api/orders/${order.id}/delete/`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRFToken': getCsrfToken(),
-      },
-      credentials: 'include',
-    });
-
-    if (response.ok) {
-      navigate('/');
-    } else {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Не удалось удалить заявку');
-    }
-  } catch (err) {
-    console.error('Ошибка удаления заявки:', err);
-    alert(err instanceof Error ? err.message : 'Не удалось удалить заявку');
-  }
-};
-
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!order) return;
-
-  try {
-    const response = await fetchWithAuth(`/api/orders/${order.id}/submit/`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken(),
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Ошибка подтверждения заявки');
-    }
-
-    const updatedOrder = await response.json();
-    setOrder(updatedOrder);
-    navigate('/parkings');
-  } catch (err) {
-    console.error('Ошибка подтверждения заявки:', err);
-    alert(err instanceof Error ? err.message : 'Не удалось отправить заявку');
-  }
-};
+  };
 
   if (loading) return <div><Loader/></div>;
   if (error) return <div>{error}</div>;
@@ -291,8 +283,19 @@ const updateQuantity = async (parkingId: number, newQuantity: number) => {
           <form onSubmit={handleSubmit}>
             <div className="PassPage-top-block">
               <div className="left-block">
-                <div className="PassPageTitle">Оформление абонемента</div>
-                <div className="PassPageTitleDiscription">Все поля обязательны для заполнения</div>
+                {isViewMode ? (
+                  <>
+                    <div className="PassPageTitle">Абонемент №{order.id}</div>
+                    <div className="PassPageTitleDiscription">
+                      {isDraft ? 'Черновик заявки' : 'Просмотр информации о заявке'}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="PassPageTitle">Оформление абонемента</div>
+                    <div className="PassPageTitleDiscription">Все поля обязательны для заполнения</div>
+                  </>
+                )}
                 
                 <div className="PassPageDiscription">Ваше имя</div>
                 <input
@@ -371,7 +374,6 @@ const updateQuantity = async (parkingId: number, newQuantity: number) => {
                               onClick={() => handleRemoveItem(parkingId)}
                               className="trash-button"
                               disabled={updatingParkings.includes(parkingId) || !isDraft}
-                              
                             >
                               <img src={TrashIcon} alt="Удалить" />
                             </button>
@@ -388,19 +390,25 @@ const updateQuantity = async (parkingId: number, newQuantity: number) => {
               </div>
             </div>
 
-            <div className="PassButtons">
-              <button 
-                type="button" 
-                className="clearButton"
-                onClick={handleClearOrder}
-                disabled={!isDraft}
-              >
-                Очистить
-              </button>
-              <button type="submit" className="AcceptButton" disabled={!isDraft}>
-                Принять
-              </button>
-            </div>
+            {(!isViewMode || isDraft) && (
+              <div className="PassButtons">
+                <button 
+                  type="button" 
+                  className="clearButton"
+                  onClick={handleClearOrder}
+                  disabled={!isDraft}
+                >
+                  Очистить
+                </button>
+                <button 
+                  type="submit" 
+                  className="AcceptButton" 
+                  disabled={!isDraft}
+                >
+                  {isDraft ? 'Принять' : 'Обновить'}
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
