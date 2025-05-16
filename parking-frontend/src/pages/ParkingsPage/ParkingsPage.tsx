@@ -1,9 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import Footer from "../../components/Footer/Footer";
 import "./ParkingsPage.css";
-import ParkingCard from "../../components/ParkingCard/ParkingCard"
+import ParkingCard from "../../components/ParkingCard/ParkingCard";
 import QuestBlock from "../../components/QuestBlock/QuestBlock";
-import SearchBar from "../../components/SearchBar/SearchBar"
-import ListIcon from "../../assets/list.svg"
+import SearchBar from "../../components/SearchBar/SearchBar";
+import ListIcon from "../../assets/list.svg";
 import { Link } from "react-router-dom";
 import { Parking, ParkingResponse } from '../../types';
 import Loader from "../../components/Loader/Loader";
@@ -16,20 +17,7 @@ const ParkingsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTime] = useState<number | null>(null);
   const [draftOrderId, setDraftOrderId] = useState<number | null>(null);
-
-  const checkDraftOrder = async () => {
-    try {
-      const response = await fetch('/api/parkings/');
-      if (response.ok) {
-        const data: ParkingResponse = await response.json();
-        if (data.draft_order) {
-          setDraftOrderId(data.draft_order.order_id);
-        }
-      }
-    } catch (err) {
-      console.error('Error checking draft order:', err);
-    }
-  };
+  const navigate = useNavigate();
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -41,49 +29,46 @@ const ParkingsPage = () => {
   };
 
   useEffect(() => {
-  const fetchParkings = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      
-      // Добавляем токен только если он есть
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch('/api/parkings/', {
-        headers
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Удаляем невалидный токен, но НЕ перезагружаем страницу
-          localStorage.removeItem('access_token');
-          return;
+    const fetchParkings = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
-      const data: ParkingResponse = await response.json();
-      setParkings(data.parkings);
-      setFilteredParkings(data.parkings);
-      
-      if (data.draft_order) {
-        setDraftOrderId(data.draft_order.order_id);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  fetchParkings();
-}, []);
+        const response = await fetch('/api/parkings/', {
+          headers
+        });
 
-  // Filter parkings based on search time
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('access_token');
+            return;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: ParkingResponse = await response.json();
+        setParkings(data.parkings);
+        setFilteredParkings(data.parkings);
+        
+        if (data.draft_order) {
+          setDraftOrderId(data.draft_order.order_id);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchParkings();
+  }, []);
+
   useEffect(() => {
     if (searchTime !== null) {
       const filtered = parkings.filter(parking => 
@@ -91,7 +76,7 @@ const ParkingsPage = () => {
       );
       setFilteredParkings(filtered);
     } else {
-      setFilteredParkings(parkings); // Show all parkings when no time is selected
+      setFilteredParkings(parkings);
     }
   }, [searchTime, parkings]);
 
@@ -113,33 +98,45 @@ const ParkingsPage = () => {
   };
 
   const handleAddToOrder = async (parkingId: number, quantity: number): Promise<void> => {
-    try {
-      const response = await fetch(`/api/parkings/${parkingId}/add-to-order/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken') || '',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ quantity }), // Отправляем количество на сервер
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      await checkDraftOrder();
-      console.log('Added to order:', data);
-      alert(`Добавлено ${quantity} парковочных мест! Текущее количество: ${data.quantity}`);
-      
-    } catch (err) {
-      console.error('Error adding to order:', err);
-      alert('Произошла ошибка при добавлении в заказ');
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      navigate('/authorize');
+      return;
     }
-  };
+
+    const response = await fetch(`/api/parkings/${parkingId}/add-to-order/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'X-CSRFToken': getCookie('csrftoken') || '',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ quantity }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      let errorData = { error: 'Unknown error' };
+      try {
+        errorData = text ? JSON.parse(text) : { error: `HTTP error! status: ${response.status}` };
+      } catch {
+        console.error('Failed to parse error response:', text);
+      }
+      throw new Error(errorData.error || 'Ошибка при добавлении в заказ');
+    }
+
+    const data = await response.json();
+    setDraftOrderId(data.order_id);
+    alert(`Добавлено ${quantity} парковочных мест!`);
+    
+  } catch (err) {
+    console.error('Error adding to order:', err);
+    alert(err instanceof Error ? err.message : 'Произошла ошибка при добавлении в заказ');
+  }
+};
   
-  // Функция для получения CSRF токена
   function getCookie(name: string) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);

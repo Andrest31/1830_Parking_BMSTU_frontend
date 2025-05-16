@@ -76,124 +76,148 @@ const PassPage: React.FC = () => {
   }, [id, token, isAuthenticated, navigate, fetchWithAuth]); // Добавили fetchWithAuth в зависимости
 
   const handleFieldBlur = async (field: keyof OrderDetail, e: React.FocusEvent<HTMLInputElement>) => {
-    if (!order) return;
-    
-    const newValue = e.target.value;
-    const prevValue = order[field];
-    
-    if (newValue === prevValue) return;
-    
-    setUpdatingFields(prev => [...prev, field as string]);
-    
-    try {
-      const response = await fetchWithAuth(`/api/orders/${order.id}/update/`, {
-        method: 'PUT',
-        body: JSON.stringify({ [field]: newValue }),
-      });
+  if (!order) return;
+  
+  const newValue = e.target.value;
+  const prevValue = order[field];
+  
+  if (newValue === prevValue) return;
+  
+  setUpdatingFields(prev => [...prev, field as string]);
+  
+  try {
+    const response = await fetchWithAuth(`/api/orders/${order.id}/update/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+      credentials: 'include',
+      body: JSON.stringify({ [field]: newValue }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка обновления');
-      }
-
-      const updatedData = await response.json();
-      setOrder(prev => ({ ...prev!, ...updatedData }));
-
-    } catch (err) {
-      console.error('Ошибка обновления:', err);
-      e.target.value = prevValue as string;
-      alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
-    } finally {
-      setUpdatingFields(prev => prev.filter(f => f !== field));
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Ошибка обновления');
     }
-  };
 
-  const updateQuantity = async (parkingId: number, newQuantity: number) => {
-    if (!order || !parkingId || newQuantity < 1) return;
-  
-    setUpdatingParkings(prev => [...prev, parkingId]);
-  
-    try {
-      const response = await fetchWithAuth(
-        `/api/orders/${order.id}/items/${parkingId}/`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ quantity: newQuantity }),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка обновления количества');
-      }
-  
-      setOrder(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          items: prev.items.map(item => 
-            item.parking?.id === parkingId 
-              ? { ...item, quantity: newQuantity } 
-              : item
-          )
-        };
-      });
-  
-    } catch (err) {
-      console.error('Ошибка обновления:', err);
-      const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
-      setOrder(freshData);
-      alert(err instanceof Error ? err.message : 'Не удалось изменить количество');
-    } finally {
-      setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
-    }
-  };
+    const updatedData = await response.json();
+    setOrder(prev => ({ ...prev!, ...updatedData }));
+
+  } catch (err) {
+    console.error('Ошибка обновления:', err);
+    e.target.value = prevValue as string;
+    alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
+  } finally {
+    setUpdatingFields(prev => prev.filter(f => f !== field));
+  }
+};
+
   
   const handleQuantityChange = (parkingId: number, delta: number) => {
-    if (!order) return;
-    
-    const currentItem = order.items.find(item => item.parking?.id === parkingId);
-    if (!currentItem) return;
-    
-    const newQuantity = currentItem.quantity + delta;
-    if (newQuantity < 1) return;
-    
-    updateQuantity(parkingId, newQuantity);
-  };
+  if (!order) return;
+  
+  const currentItem = order.items.find(item => item.parking?.id === parkingId);
+  if (!currentItem) return;
+  
+  const newQuantity = currentItem.quantity + delta;
+  if (newQuantity < 1) return;
+  
+  updateQuantity(parkingId, newQuantity);
+};
 
-  const handleRemoveItem = async (parkingId: number) => {
-    if (!order || !window.confirm('Удалить парковку из заявки?')) return;
-  
-    setUpdatingParkings(prev => [...prev, parkingId]);
-  
-    try {
-      const response = await fetchWithAuth(
-        `/api/orders/${order.id}/items/`,
-        {
-          method: 'DELETE',
-          body: JSON.stringify({ parking_id: parkingId }),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось удалить элемент');
+const updateQuantity = async (parkingId: number, newQuantity: number) => {
+  if (!order || !parkingId || newQuantity < 1) return;
+
+  setUpdatingParkings(prev => [...prev, parkingId]);
+
+  try {
+    const response = await fetchWithAuth(
+      `/api/orders/${order.id}/items/${parkingId}/`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+        credentials: 'include',
       }
-  
-      setOrder(prev => prev ? {
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Ошибка обновления количества');
+    }
+
+    setOrder(prev => {
+      if (!prev) return null;
+      return {
         ...prev,
-        items: prev.items.filter(item => item.parking?.id !== parkingId)
-      } : null);
-  
-    } catch (err) {
-      console.error('Ошибка удаления:', err);
+        items: prev.items.map(item => 
+          item.parking?.id === parkingId 
+            ? { ...item, quantity: newQuantity } 
+            : item
+        )
+      };
+    });
+
+  } catch (err) {
+    console.error('Ошибка обновления:', err);
+    try {
       const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
       setOrder(freshData);
-      alert(err instanceof Error ? err.message : 'Ошибка удаления');
-    } finally {
-      setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
+    } catch (fetchError) {
+      console.error('Не удалось обновить данные:', fetchError);
     }
-  };
+    alert(err instanceof Error ? err.message : 'Не удалось изменить количество');
+  } finally {
+    setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
+  }
+};
+
+  const handleRemoveItem = async (parkingId: number) => {
+  if (!order || !window.confirm('Удалить парковку из заявки?')) return;
+
+  setUpdatingParkings(prev => [...prev, parkingId]);
+
+  try {
+    const response = await fetchWithAuth(
+      `/api/orders/${order.id}/items/`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify({ parking_id: parkingId, order_id: order.id }),
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Не удалось удалить элемент');
+    }
+
+    setOrder(prev => prev ? {
+      ...prev,
+      items: prev.items.filter(item => item.parking?.id !== parkingId)
+    } : null);
+
+  } catch (err) {
+    console.error('Ошибка удаления:', err);
+    try {
+      const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
+      setOrder(freshData);
+    } catch (fetchError) {
+      console.error('Не удалось обновить данные:', fetchError);
+    }
+    alert(err instanceof Error ? err.message : 'Ошибка удаления');
+  } finally {
+    setUpdatingParkings(prev => prev.filter(id => id !== parkingId));
+  }
+};
 
   const getCsrfToken = () => {
       const cookieValue = document.cookie
@@ -204,54 +228,56 @@ const PassPage: React.FC = () => {
     };
     
   const handleClearOrder = async () => {
-    if (!order || !window.confirm('Вы уверены, что хотите удалить заявку?')) return;
-  
-    try {
-      const response = await fetch(`/api/orders/${order.id}/delete/`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-        },
-        credentials: 'include',
-      });
-  
-      if (response.ok) {
-        navigate('/');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось удалить заявку');
-      }
-    } catch (err) {
-      console.error('Ошибка удаления заявки:', err);
-      alert(err instanceof Error ? err.message : 'Не удалось удалить заявку');
+  if (!order || !window.confirm('Вы уверены, что хотите удалить заявку?')) return;
+
+  try {
+    const response = await fetchWithAuth(`/api/orders/${order.id}/delete/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': getCsrfToken(),
+      },
+      credentials: 'include',
+    });
+
+    if (response.ok) {
+      navigate('/');
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Не удалось удалить заявку');
     }
-  };
+  } catch (err) {
+    console.error('Ошибка удаления заявки:', err);
+    alert(err instanceof Error ? err.message : 'Не удалось удалить заявку');
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!order) return;
-  
-    try {
-      const response = await fetch(`/api/orders/${order.id}/submit/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCsrfToken(),
-        },
-        credentials: 'include',
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка подтверждения заявки');
-      }
-  
-      navigate('/parkings');
-    } catch (err) {
-      console.error('Ошибка подтверждения заявки:', err);
-      alert(err instanceof Error ? err.message : 'Не удалось отправить заявку');
+  e.preventDefault();
+  if (!order) return;
+
+  try {
+    const response = await fetchWithAuth(`/api/orders/${order.id}/submit/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Ошибка подтверждения заявки');
     }
-  };
+
+    const updatedOrder = await response.json();
+    setOrder(updatedOrder);
+    navigate('/parkings');
+  } catch (err) {
+    console.error('Ошибка подтверждения заявки:', err);
+    alert(err instanceof Error ? err.message : 'Не удалось отправить заявку');
+  }
+};
 
   if (loading) return <div><Loader/></div>;
   if (error) return <div>{error}</div>;

@@ -3,6 +3,8 @@ import "./ProfilePage.css";
 import { useSelector } from "react-redux";
 import { RootState } from "../../utils/store";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../components/Loader/Loader";
+import PasswordChangeModal from "../../components/PasswordChangeModal/PasswordChangeModal";
 
 interface UserData {
   username: string;
@@ -18,6 +20,7 @@ const ProfilePage: React.FC = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -26,15 +29,11 @@ const ProfilePage: React.FC = () => {
     email: "",
   });
 
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
-      navigate("/");
+      navigate("/authorize");
       return;
     }
 
@@ -83,7 +82,7 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch("api/auth/user/", {
+      const response = await fetch("/api/auth/user/update/", {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -98,26 +97,32 @@ const ProfilePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update user data");
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update user data");
       }
 
+      // Обновляем данные после сохранения
+      const updatedResponse = await fetch("/api/auth/user/", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      const updatedData = await updatedResponse.json();
+      setUserData(updatedData);
+      
       alert("Данные успешно сохранены");
     } catch (err) {
       setError("Ошибка при сохранении");
       console.error("Ошибка сохранения:", err);
+      alert(err instanceof Error ? err.message : "Произошла ошибка");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handlePasswordUpdate = async () => {
-    if (newPassword !== confirmPassword) {
-      alert("Пароли не совпадают");
-      return;
-    }
-
+  const handlePasswordUpdate = async (oldPassword: string, newPassword: string, confirmPassword: string): Promise<boolean> => {
     try {
-      const response = await fetch("/auth/password/change/", {
+      const response = await fetch("/api/auth/password/change/", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -131,22 +136,18 @@ const ProfilePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to change password");
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Ошибка при смене пароля");
       }
-
-      alert("Пароль успешно изменен");
-      setShowPasswordForm(false);
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      
+      return true;
     } catch (err) {
-      alert("Ошибка при смене пароля");
       console.error("Ошибка смены пароля:", err);
+      throw err;
     }
   };
 
-
-  if (loading) return <div>Загрузка...</div>;
+  if (loading) return <div><Loader/></div>;
   if (error) return <div>{error}</div>;
   if (!userData) return <div>Данные пользователя не найдены</div>;
 
@@ -157,7 +158,12 @@ const ProfilePage: React.FC = () => {
       <div className="user-profile__form">
         <div className="user-profile__field">
           <label>Логин</label>
-          <input type="text" value={userData.username} readOnly />
+          <input 
+            type="text" 
+            value={userData.username} 
+            readOnly 
+            className="readonly-input"
+          />
         </div>
 
         <div className="user-profile__field">
@@ -202,10 +208,10 @@ const ProfilePage: React.FC = () => {
 
         <div className="user-profile__actions">
           <button
-            onClick={() => setShowPasswordForm(!showPasswordForm)}
+            onClick={() => setShowPasswordModal(true)}
             className="link-button"
           >
-            {showPasswordForm ? "Отменить" : "Сменить пароль"}
+            Сменить пароль
           </button>
           <button
             onClick={handleSave}
@@ -215,37 +221,14 @@ const ProfilePage: React.FC = () => {
             {isSaving ? "Сохранение..." : "Сохранить"}
           </button>
         </div>
-
-        {showPasswordForm && (
-          <div className="user-profile__password-form">
-            <h3>Смена пароля</h3>
-            <input
-              type="password"
-              placeholder="Текущий пароль"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Новый пароль"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Повторите новый пароль"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-            <button
-              onClick={handlePasswordUpdate}
-              className="primary-button"
-            >
-              Обновить пароль
-            </button>
-          </div>
-        )}
       </div>
+
+      {showPasswordModal && (
+        <PasswordChangeModal
+          onClose={() => setShowPasswordModal(false)}
+          onChangePassword={handlePasswordUpdate}
+        />
+      )}
     </div>
   );
 };

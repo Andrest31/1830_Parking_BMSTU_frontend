@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './ParkingPage.css';
 import Footer from "../../components/Footer/Footer";
 import { Parking } from '../../types';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Loader from "../../components/Loader/Loader";
   
 const ParkingPage: React.FC = () => {
@@ -10,38 +10,44 @@ const ParkingPage: React.FC = () => {
   const [parking, setParking] = useState<Parking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const quantity = 1;
+  const navigate = useNavigate();
 
-  const handleAddToOrder = async (parkingId: number, quantity: number) => {
+  const handleAddToOrder = async (parkingId: number) => {
     try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        navigate('/authorize');
+        return;
+      }
+
       const response = await fetch(`/api/parkings/${parkingId}/add-to-order/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
           'X-CSRFToken': document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*=\s*([^;]*).*$)|^.*$/, '$1') || '',
         },
         credentials: 'include',
-        body: JSON.stringify({ quantity }),
+        body: JSON.stringify({ quantity: 1 }), // Фиксированное количество 1
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Ошибка HTTP! Статус: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('Added to order:', data);
-      alert(`Добавлено ${quantity} парковочных мест! Текущее количество: ${data.quantity}`);
+      await response.json();
+      alert('Парковочное место добавлено в заказ!');
     } catch (err) {
-      console.error('Error adding to order:', err);
-      alert('Произошла ошибка при добавлении в заказ');
-      throw err;
+      console.error('Ошибка при добавлении в заказ:', err);
+      alert(err instanceof Error ? err.message : 'Произошла ошибка');
     }
   };
 
-  const handleAddClick = async (e: React.MouseEvent) => {
+  const handleAddClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (parking) {
-      await handleAddToOrder(parking.id, quantity);
+      handleAddToOrder(parking.id);
     }
   };
 
@@ -70,8 +76,6 @@ const ParkingPage: React.FC = () => {
   
   return (
     <div className="app-container">
-
-      {/* Main Content */}
       <div className="image-container">
         <img src={parking.description_url} alt="Parking" className="parking-img" />
         <div className="parking-title">Аренда места у {parking.short_name}</div>

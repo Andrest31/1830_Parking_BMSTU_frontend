@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../utils/hooks";
 import { fetchUserOrders } from "../../utils/ordersSlice";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../components/Loader/Loader"
 import "./ListPage.css";
 
 const UserRequests: React.FC = () => {
@@ -31,7 +32,7 @@ const UserRequests: React.FC = () => {
     );
   }
 
-  if (loading) return <div>Загрузка...</div>;
+  if (loading) return <div><Loader/></div>;
   if (error) return <div>Ошибка: {error}</div>;
 
   return (
