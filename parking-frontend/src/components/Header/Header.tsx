@@ -8,7 +8,7 @@ import Logouticon from "../../assets/exit2.svg";
 import apiClient from "../../utils/apiClient";
 
 const Header = () => {
-  const { token } = useAppSelector(state => state.auth);
+  const { access } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -43,7 +43,7 @@ const Header = () => {
         </div>
 
         <nav className="navbar">
-          {token && (
+          {access && (
             <NavLink 
               to="/list" 
               className={({ isActive }) => 
@@ -64,7 +64,7 @@ const Header = () => {
           </NavLink>
 
           <NavLink 
-            to={token ? "/profile" : "/authorize"} 
+            to={access ? "/profile" : "/authorize"} 
             className={({ isActive }) => 
               `navbar-item ${isActive ? "active" : ""}`
             }
@@ -72,7 +72,7 @@ const Header = () => {
             <img src={ProfileIcon} alt="Профиль" className="profile" />
           </NavLink>
 
-          {token && (
+          {access && (
             <div 
               onClick={handleLogout}
               className="navbar-item logout-button"

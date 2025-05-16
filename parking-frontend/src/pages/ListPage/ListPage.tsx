@@ -7,20 +7,23 @@ import "./ListPage.css";
 const UserRequests: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { orders, loading, error } = useAppSelector(state => state.orders);
-  const { token } = useAppSelector(state => state.auth);
+  const { orders, loading, error } = useAppSelector((state) => state.orders);
+  const { access, isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (token) {
-      dispatch(fetchUserOrders());
+    if (!isAuthenticated || !access) {
+      navigate("/authorize");
+      return;
     }
-  }, [dispatch, token]);
+
+    dispatch(fetchUserOrders());
+  }, [dispatch, access, isAuthenticated, navigate]);
 
   const handleRowClick = (orderId: number) => {
-    navigate(`/pass/${orderId}`); // Переход на страницу заявки
+    navigate(`/pass/${orderId}`);
   };
 
-  if (!token) {
+  if (!isAuthenticated) {
     return (
       <div className="auth-required">
         <h2>Для просмотра заявок необходимо авторизоваться</h2>

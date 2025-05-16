@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./ProfilePage.css";
-import apiClient from "../../utils/apiClient";
 import { useSelector } from "react-redux";
 import { RootState } from "../../utils/store";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,7 @@ interface UserData {
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const token = useSelector((state: RootState) => state.auth.access);
+  const { access: token, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,20 +33,36 @@ const ProfilePage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
+    if (!isAuthenticated || !token) {
+      navigate("/");
       return;
     }
 
     const fetchUserData = async () => {
       try {
-        const response = await apiClient.get("/auth/user/");
-        setUserData(response.data);
+        const response = await fetch("/api/auth/user/", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            navigate("/authorize");
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
+
+        const data = await response.json();
+        setUserData(data);
         setFormData({
-          firstName: response.data.first_name || "",
-          lastName: response.data.last_name || "",
-          carNumber: response.data.car_number || "",
-          email: response.data.email || "",
+          firstName: data.first_name || "",
+          lastName: data.last_name || "",
+          carNumber: data.car_number || "",
+          email: data.email || "",
         });
       } catch (err) {
         setError("Не удалось загрузить данные пользователя");
@@ -58,7 +73,7 @@ const ProfilePage: React.FC = () => {
     };
 
     fetchUserData();
-  }, [token, navigate]);
+  }, [token, isAuthenticated, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -68,12 +83,24 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await apiClient.patch("/auth/user/", {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        email: formData.email,
-        car_number: formData.carNumber,
+      const response = await fetch("api/auth/user/", {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          car_number: formData.carNumber,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to update user data");
+      }
+
       alert("Данные успешно сохранены");
     } catch (err) {
       setError("Ошибка при сохранении");
@@ -90,11 +117,23 @@ const ProfilePage: React.FC = () => {
     }
 
     try {
-      await apiClient.post("/auth/password/change/", {
-        old_password: oldPassword,
-        new_password1: newPassword,
-        new_password2: confirmPassword,
+      const response = await fetch("/auth/password/change/", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          old_password: oldPassword,
+          new_password1: newPassword,
+          new_password2: confirmPassword,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to change password");
+      }
+
       alert("Пароль успешно изменен");
       setShowPasswordForm(false);
       setOldPassword("");
@@ -105,6 +144,7 @@ const ProfilePage: React.FC = () => {
       console.error("Ошибка смены пароля:", err);
     }
   };
+
 
   if (loading) return <div>Загрузка...</div>;
   if (error) return <div>{error}</div>;

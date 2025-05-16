@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import TrashIcon from '../../assets/trash.svg';
+import { RootState } from '../../utils/store';
 import Footer from "../../components/Footer/Footer";
 import Loader from "../../components/Loader/Loader";
 
@@ -10,6 +12,7 @@ import { OrderDetail } from '../../types';
 const PassPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { access: token, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,16 +20,44 @@ const PassPage: React.FC = () => {
   const [updatingFields, setUpdatingFields] = useState<string[]>([]);
   const isDraft = order?.status === 'draft';
 
+  const fetchWithAuth = useCallback(async (url: string, options: RequestInit = {}) => {
+    if (!token) {
+      throw new Error('No authentication token');
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem('access_token');
+      navigate('/authorize');
+      throw new Error('Session expired');
+    }
+
+    return response;
+  }, [token, navigate]);
+
   useEffect(() => {
+    if (!isAuthenticated || !token) {
+      navigate('/authorize');
+      return;
+    }
+
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`/api/orders/${id}/`);
+        const response = await fetchWithAuth(`/api/orders/${id}/`);
         if (!response.ok) {
           throw new Error('Заявка не найдена');
         }
+        
         const data: OrderDetail = await response.json();
         
-        // Форматируем дату для корректного отображения в input[type="date"]
         if (data.deadline) {
           const date = new Date(data.deadline);
           const formattedDate = date.toISOString().split('T')[0];
@@ -42,16 +73,7 @@ const PassPage: React.FC = () => {
     };
 
     fetchOrder();
-  }, [id]);
-
-  // Функция для получения CSRF токена из куков
-  const getCsrfToken = () => {
-    const cookieValue = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('csrftoken='))
-      ?.split('=')[1];
-    return cookieValue || '';
-  };
+  }, [id, token, isAuthenticated, navigate, fetchWithAuth]); // Добавили fetchWithAuth в зависимости
 
   const handleFieldBlur = async (field: keyof OrderDetail, e: React.FocusEvent<HTMLInputElement>) => {
     if (!order) return;
@@ -59,20 +81,13 @@ const PassPage: React.FC = () => {
     const newValue = e.target.value;
     const prevValue = order[field];
     
-    // Если значение не изменилось, ничего не делаем
     if (newValue === prevValue) return;
     
-    // Блокируем поле на время запроса
     setUpdatingFields(prev => [...prev, field as string]);
     
     try {
-      const response = await fetch(`/api/orders/${order.id}/update/`, {
+      const response = await fetchWithAuth(`/api/orders/${order.id}/update/`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCsrfToken(),
-        },
-        credentials: 'include',
         body: JSON.stringify({ [field]: newValue }),
       });
 
@@ -81,13 +96,11 @@ const PassPage: React.FC = () => {
         throw new Error(errorData.error || 'Ошибка обновления');
       }
 
-      // Получаем подтверждение от сервера
       const updatedData = await response.json();
       setOrder(prev => ({ ...prev!, ...updatedData }));
 
     } catch (err) {
       console.error('Ошибка обновления:', err);
-      // Откатываем UI к предыдущему значению
       e.target.value = prevValue as string;
       alert(err instanceof Error ? err.message : 'Ошибка обновления данных');
     } finally {
@@ -101,15 +114,10 @@ const PassPage: React.FC = () => {
     setUpdatingParkings(prev => [...prev, parkingId]);
   
     try {
-      const response = await fetch(
+      const response = await fetchWithAuth(
         `/api/orders/${order.id}/items/${parkingId}/`,
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken(),
-          },
-          credentials: 'include',
           body: JSON.stringify({ quantity: newQuantity }),
         }
       );
@@ -131,12 +139,9 @@ const PassPage: React.FC = () => {
         };
       });
   
-      const updatedData = await response.json();
-      console.log('Сервер подтвердил обновление:', updatedData);
-  
     } catch (err) {
       console.error('Ошибка обновления:', err);
-      const freshData = await fetch(`/api/orders/${order.id}/`).then(res => res.json());
+      const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
       setOrder(freshData);
       alert(err instanceof Error ? err.message : 'Не удалось изменить количество');
     } finally {
@@ -162,18 +167,11 @@ const PassPage: React.FC = () => {
     setUpdatingParkings(prev => [...prev, parkingId]);
   
     try {
-      const response = await fetch(
+      const response = await fetchWithAuth(
         `/api/orders/${order.id}/items/`,
         {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCsrfToken(),
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            parking_id: parkingId
-          }),
+          body: JSON.stringify({ parking_id: parkingId }),
         }
       );
   
@@ -189,7 +187,7 @@ const PassPage: React.FC = () => {
   
     } catch (err) {
       console.error('Ошибка удаления:', err);
-      const freshData = await fetch(`/api/orders/${order.id}/`).then(res => res.json());
+      const freshData = await fetchWithAuth(`/api/orders/${order.id}/`).then(res => res.json());
       setOrder(freshData);
       alert(err instanceof Error ? err.message : 'Ошибка удаления');
     } finally {
@@ -197,6 +195,14 @@ const PassPage: React.FC = () => {
     }
   };
 
+  const getCsrfToken = () => {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+      return cookieValue || '';
+    };
+    
   const handleClearOrder = async () => {
     if (!order || !window.confirm('Вы уверены, что хотите удалить заявку?')) return;
   

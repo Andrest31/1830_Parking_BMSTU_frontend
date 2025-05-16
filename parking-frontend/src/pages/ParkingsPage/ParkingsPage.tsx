@@ -41,41 +41,47 @@ const ParkingsPage = () => {
   };
 
   useEffect(() => {
-    const fetchParkings = async () => {
-  try {
-    const token = localStorage.getItem('access_token');
-    const response = await fetch('/api/parkings/', {
-      headers: {
-        'Authorization': `Bearer ${token}`  // Добавляем JWT-токен
+  const fetchParkings = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Добавляем токен только если он есть
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-    });
 
-    if (!response.ok) {
-      // Если статус 401 - токен невалидный или просрочен
-      if (response.status === 401) {
-        localStorage.removeItem('access_token');
-        window.location.reload();  // Перенаправляем на логин
-        return;
+      const response = await fetch('/api/parkings/', {
+        headers
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Удаляем невалидный токен, но НЕ перезагружаем страницу
+          localStorage.removeItem('access_token');
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
 
-    const data: ParkingResponse = await response.json();
-    setParkings(data.parkings);
-    setFilteredParkings(data.parkings);
-    
-    if (data.draft_order) {
-      setDraftOrderId(data.draft_order.order_id);
+      const data: ParkingResponse = await response.json();
+      setParkings(data.parkings);
+      setFilteredParkings(data.parkings);
+      
+      if (data.draft_order) {
+        setDraftOrderId(data.draft_order.order_id);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Unknown error');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   
-    fetchParkings();
-  }, []);
+  fetchParkings();
+}, []);
 
   // Filter parkings based on search time
   useEffect(() => {

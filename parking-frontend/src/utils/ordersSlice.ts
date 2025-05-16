@@ -1,32 +1,24 @@
-// store/ordersSlice.ts
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import apiClient from '../utils/apiClient';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { RootState } from './store';
 
-// types.ts
-export interface Parking {
+interface OrderItem {
   id: number;
-  name: string;
-  short_name: string;
-}
-
-export interface ParkingItem {
-  id: number;
-  parking: Parking;
-  short_name: string;
+  parking: {
+    id: number;
+    name: string;
+    short_name: string;
+  };
   quantity: number;
 }
 
-export interface Order {
+interface Order {
   id: number;
   created_at: string;
-  submitted_at?: string;
-  deadline: string;
-  car_number: string;
+  deadline: string | null;
   full_name: string;
-  total_quantity: number;
+  car_number: string;
   status: string;
-  items: ParkingItem[];  // Теперь используем items вместо parkings
+  items: OrderItem[];
 }
 
 interface OrdersState {
@@ -41,27 +33,38 @@ const initialState: OrdersState = {
   error: null,
 };
 
-export const fetchUserOrders = createAsyncThunk(
-  "orders/fetchUserOrders",
-  async (_, { rejectWithValue }) => {
+export const fetchUserOrders = createAsyncThunk<Order[], void, { state: RootState }>(
+  'orders/fetchUserOrders',
+  async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    if (!auth.access) {
+      return rejectWithValue('No authentication token');
+    }
+
     try {
-      const response = await apiClient.get('/orders/'); // Используем наш apiClient
-      return response.data.orders;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          // Можно добавить автоматический logout здесь
-          return rejectWithValue("Требуется авторизация");
-        }
-        return rejectWithValue(error.response?.data?.error || "Ошибка загрузки заявок");
+      const response = await fetch('/api/orders/', {
+        headers: {
+          'Authorization': `Bearer ${auth.access}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        return rejectWithValue(error.message || 'Request failed');
       }
-      return rejectWithValue("Неизвестная ошибка");
+
+      const data = await response.json();
+      return data.orders;
+    } catch (err) {
+      const error = err as Error;
+      return rejectWithValue(error.message);
     }
   }
 );
 
 const ordersSlice = createSlice({
-  name: "orders",
+  name: 'orders',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
