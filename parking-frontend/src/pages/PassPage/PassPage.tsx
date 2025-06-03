@@ -19,6 +19,7 @@ const PassPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [updatingParkings, setUpdatingParkings] = useState<number[]>([]);
   const [updatingFields, setUpdatingFields] = useState<string[]>([]);
+  const [, setUserCarNumber] = useState<string | null>(null);
   
   const isDraft = order?.status === 'draft';
   const isViewMode = location.state?.fromListPage || false;
@@ -52,22 +53,48 @@ const PassPage: React.FC = () => {
       return;
     }
 
-    const fetchOrder = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetchWithAuth(`/api/orders/${id}/`);
-        if (!response.ok) {
+        // Загружаем профиль пользователя для получения номера машины
+        const profileResponse = await fetchWithAuth('/api/auth/user/');
+        if (!profileResponse.ok) {
+          throw new Error('Не удалось загрузить профиль пользователя');
+        }
+        const profileData = await profileResponse.json();
+        setUserCarNumber(profileData.car_number || null);
+
+        // Загружаем заявку
+        const orderResponse = await fetchWithAuth(`/api/orders/${id}/`);
+        if (!orderResponse.ok) {
           throw new Error('Заявка не найдена');
         }
         
-        const data: OrderDetail = await response.json();
+        const orderData: OrderDetail = await orderResponse.json();
         
-        if (data.deadline) {
-          const date = new Date(data.deadline);
-          const formattedDate = date.toISOString().split('T')[0];
-          data.deadline = formattedDate;
+        // Если заявка в статусе черновика и есть номер машины в профиле,
+        // но нет номера в заявке - подставляем из профиля
+        if (orderData.status === 'draft' && profileData.car_number && !orderData.state_number) {
+          orderData.state_number = profileData.car_number;
+          
+          // Обновляем заявку на сервере
+          await fetchWithAuth(`/api/orders/${orderData.id}/update/`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCsrfToken(),
+            },
+            credentials: 'include',
+            body: JSON.stringify({ state_number: profileData.car_number }),
+          });
         }
         
-        setOrder(data);
+        if (orderData.deadline) {
+          const date = new Date(orderData.deadline);
+          const formattedDate = date.toISOString().split('T')[0];
+          orderData.deadline = formattedDate;
+        }
+        
+        setOrder(orderData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Произошла ошибка');
       } finally {
@@ -75,7 +102,7 @@ const PassPage: React.FC = () => {
       }
     };
 
-    fetchOrder();
+    fetchData();
   }, [id, token, isAuthenticated, navigate, fetchWithAuth]);
 
   const handleFieldBlur = async (field: keyof OrderDetail, e: React.FocusEvent<HTMLInputElement>) => {
@@ -318,6 +345,7 @@ const PassPage: React.FC = () => {
                   required
                 />
                 {updatingFields.includes('state_number') && <span className="saving-indicator">Сохраняем..</span>}
+      
 
                 <div className="PassPageDiscription">Срок действия абонемента</div>
                 <input
